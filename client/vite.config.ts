@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// In der Entwicklung läuft das Frontend auf 5173 und leitet /api an das
-// Express-Backend (Port 3000) weiter. Im Produktionsbuild liefert Express
-// die statischen Dateien aus client/dist selbst aus.
+// Reine Frontend-App. Im Dev-Modus läuft Vite auf 5173; /api ist für später
+// vorgesehen (echte Datenquellen) und wird ans Backend auf 3000 weitergeleitet.
+// Im Produktionsbuild liefert der kleine Express-Server client/dist aus.
 export default defineConfig({
   plugins: [react()],
   server: {

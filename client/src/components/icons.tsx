@@ -1,0 +1,98 @@
+// Schlanke, einheitliche Outline-Icons (Lucide-Stil) als Inline-SVG.
+// currentColor -> Farbe wird per CSS gesteuert. Bewusst KEINE Emoji als Icons.
+import type { SVGProps } from 'react'
+
+type P = SVGProps<SVGSVGElement>
+
+const base = (props: P) => ({
+  width: 20,
+  height: 20,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.75,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+  ...props
+})
+
+export const WeatherIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M17 18a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.6 1.5A3.5 3.5 0 0 0 7 18Z" />
+    <path d="M12 3v1M4.9 6 5.6 6.7M19.1 6l-.7.7" />
+  </svg>
+)
+
+export const CalendarIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4.5" width="18" height="16" rx="2" />
+    <path d="M3 9h18M8 3v3M16 3v3" />
+  </svg>
+)
+
+export const MailIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m4 7 8 6 8-6" />
+  </svg>
+)
+
+export const SwapIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M7 4 3 8l4 4" />
+    <path d="M3 8h13a4 4 0 0 1 0 8h-1" />
+    <path d="m17 20 4-4-4-4" />
+  </svg>
+)
+
+export const TrendingIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m3 17 6-6 4 4 8-8" />
+    <path d="M15 7h6v6" />
+  </svg>
+)
+
+export const ChartIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 4v16h16" />
+    <rect x="7" y="11" width="3" height="6" rx="0.5" />
+    <rect x="12" y="7" width="3" height="10" rx="0.5" />
+    <rect x="17" y="13" width="3" height="4" rx="0.5" />
+  </svg>
+)
+
+export const GlobeIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+  </svg>
+)
+
+export const WalletIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3 7a2 2 0 0 1 2-2h12v4" />
+    <rect x="3" y="7" width="18" height="12" rx="2" />
+    <circle cx="16.5" cy="13" r="1.25" />
+  </svg>
+)
+
+export const ExamIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 4 2 9l10 5 10-5-10-5Z" />
+    <path d="M6 11v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5" />
+  </svg>
+)
+
+export const ChevronRightIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m9 6 6 6-6 6" />
+  </svg>
+)
+
+export const SparkIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+    <path d="M6.3 6.3 9 9M15 15l2.7 2.7M17.7 6.3 15 9M9 15l-2.7 2.7" />
+  </svg>
+)
