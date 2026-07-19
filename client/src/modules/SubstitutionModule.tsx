@@ -4,14 +4,11 @@ import type { SubstitutionKind } from '../types.ts'
 const kindLabel: Record<SubstitutionKind, string> = {
   cancelled: 'Entfall',
   'room-change': 'Raum',
-  substitution: 'Vertretung',
-  info: 'Info'
+  substitution: 'Vertretung'
 }
 
 export default function SubstitutionModule() {
-  if (substitutions.length === 0) {
-    return <p className="empty">Heute keine Änderungen.</p>
-  }
+  if (substitutions.length === 0) return <p className="state">Heute keine Änderungen.</p>
   return (
     <ul className="list">
       {substitutions.map((s) => (

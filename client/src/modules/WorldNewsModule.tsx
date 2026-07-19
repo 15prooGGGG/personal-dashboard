@@ -10,7 +10,7 @@ export default function WorldNewsModule() {
           <a className="news" href={n.url} target="_blank" rel="noopener noreferrer">
             <span className="news__main">
               <span className="news__title">{n.title}</span>
-              <span className="muted news__meta">
+              <span className="news__meta">
                 {n.source} · {relativeTime(n.publishedAt)}
               </span>
             </span>

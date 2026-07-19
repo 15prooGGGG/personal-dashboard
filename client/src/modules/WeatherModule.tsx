@@ -2,17 +2,16 @@ import { weather } from '../data/mock.ts'
 
 export default function WeatherModule() {
   return (
-    <div className="weather">
+    <div>
       <div className="weather__now">
         <span className="weather__temp data">{weather.tempC}°</span>
         <div className="weather__meta">
-          <p className="weather__cond">{weather.condition}</p>
+          <p style={{ fontWeight: 500 }}>{weather.condition}</p>
           <p className="muted">
             Gefühlt {weather.feelsLikeC}° · {weather.precipitationProbability}% Regen
           </p>
           <p className="muted data">
-            <span className="is-up">↑{weather.highC}°</span>{' '}
-            <span className="is-down">↓{weather.lowC}°</span>
+            <span className="up">↑{weather.highC}°</span> <span className="down">↓{weather.lowC}°</span>
           </p>
         </div>
       </div>
