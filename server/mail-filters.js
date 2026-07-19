@@ -37,12 +37,13 @@ export const MAIL_TOPICS = [
     senders: []
   },
   {
-    id: 'newsletter',
-    label: 'Newsletter',
-    // Später gemeinsam festlegen (welche Newsletter sind dir wichtig?).
+    id: 'finanzen',
+    label: 'Finanzen',
     keywords: [],
-    senders: []
+    // Wichtige Finanz-Newsletter (Absender-Domain genügt).
+    senders: ['extraetf.com', 'onvista.de', 'plus500.com']
   }
+  // Weitere Themen (Musik/DJ, Tech/KI …) später ergänzen.
 ]
 
 // Zusätzlich zu den Themen immer auch manuell geflaggte Mails zeigen.
