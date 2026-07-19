@@ -9,6 +9,12 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "@notionhq/client": "^5.23.2",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "imapflow": "^1.4.7",
+    "node-ical": "^0.26.1",
+    "rss-parser": "^3.13.0",
+    "tsdav": "^2.3.1"
   }
 }

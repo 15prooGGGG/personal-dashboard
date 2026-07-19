@@ -784,6 +784,92 @@ a {
   }
 }
 
+/* Bereichs-Kopf mit Icon --------------------------------------------------- */
+.section__title--icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section__icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+/* Einrichtungs-Hinweis (NotConnected) -------------------------------------- */
+.setup {
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 1.5rem 1.6rem;
+  background: var(--surface);
+}
+.setup__lead {
+  margin: 0 0 0.9rem;
+  font-weight: 500;
+}
+.setup__steps {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+}
+.setup__error {
+  margin: 0 0 1rem;
+}
+.setup__env {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+code {
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+/* Kalender-Tagesgruppen ----------------------------------------------------- */
+.daygroup + .daygroup {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.daygroup__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+/* To-Do -------------------------------------------------------------------- */
+.todo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+.todo__box {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+}
+.todo__title {
+  flex: 1;
+  font-weight: 500;
+}
+.todo__due {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 /* Responsive --------------------------------------------------------------- */
 @media (max-width: 560px) {
   .shell {

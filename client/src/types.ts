@@ -56,7 +56,15 @@ export interface CalendarEvent {
   id: string
   title: string
   start: string
+  end?: string | null
   location?: string
+  allDay?: boolean
+}
+export interface Todo {
+  id: string
+  title: string
+  done: boolean
+  due: string | null
 }
 export interface MailItem {
   id: string

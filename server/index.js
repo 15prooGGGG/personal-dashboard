@@ -3,6 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import { fetchQuotes, fetchHistory, WATCHLIST } from './stocks.js'
+import { isConfigured } from './config.js'
+import { fetchNews } from './integrations/news.js'
+import { fetchCalendarEvents } from './integrations/calendar.js'
+import { fetchImportantMails } from './integrations/mail.js'
+import { fetchTodos } from './integrations/todo.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -15,6 +20,38 @@ app.use(express.json())
 // ---------------------------------------------------------------------------
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), uptime: process.uptime() })
+})
+
+// Übersicht, welche Dienste verbunden sind (ohne Zugangsdaten preiszugeben).
+app.get('/api/services', (req, res) => {
+  res.json({
+    calendar: isConfigured.calendar,
+    mail: isConfigured.mail,
+    todo: isConfigured.notion,
+    news: true
+  })
+})
+
+// News / Finanznews via RSS. ?type=world|finance
+app.get('/api/news', async (req, res) => {
+  try {
+    const type = req.query.type === 'finance' ? 'finance' : 'world'
+    res.json(await fetchNews(type))
+  } catch (err) {
+    console.error('news error:', err.message)
+    res.status(502).json({ error: 'News konnten nicht geladen werden' })
+  }
+})
+
+// Kalender / Mail / To-Do liefern selbst einen { configured, ... }-Status.
+app.get('/api/calendar', async (req, res) => {
+  res.json(await fetchCalendarEvents())
+})
+app.get('/api/mail', async (req, res) => {
+  res.json(await fetchImportantMails())
+})
+app.get('/api/todo', async (req, res) => {
+  res.json(await fetchTodos())
 })
 
 // Aktuelle Kurse der Watchlist (echte, verzögerte Daten via Yahoo).

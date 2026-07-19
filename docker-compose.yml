@@ -8,6 +8,9 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    # Secrets kommen zur Laufzeit aus der .env (nicht ins Image gebacken).
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
