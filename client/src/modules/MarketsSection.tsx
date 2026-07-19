@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { TooltipProps } from 'recharts'
-import { useStocks, useHistory } from '../lib/useStocks.ts'
+import { useHistory } from '../lib/useStocks.ts'
+import type { Quote } from '../types.ts'
 import { formatCurrency, formatPercent, formatDateShort, deltaClass } from '../lib/format.ts'
 
 const RANGES = [
@@ -25,8 +26,14 @@ function ChartTooltip({ active, payload }: TooltipProps<number, string>) {
   )
 }
 
-export default function MarketsSection() {
-  const { quotes, loading, error, reload } = useStocks()
+interface MarketsSectionProps {
+  quotes: Quote[]
+  loading: boolean
+  error: string | null
+  reload: () => void
+}
+
+export default function MarketsSection({ quotes, loading, error, reload }: MarketsSectionProps) {
   const [symbol, setSymbol] = useState(DEFAULT_SYMBOL)
   const [rangeKey, setRangeKey] = useState<(typeof RANGES)[number]['key']>('1M')
 
