@@ -1,5 +1,4 @@
 import type { NavItem } from '../nav.tsx'
-import { ChartIcon } from './icons.tsx'
 
 interface RailProps {
   items: NavItem[]
@@ -12,9 +11,6 @@ interface RailProps {
 export default function Rail({ items, activeId, onSelect }: RailProps) {
   return (
     <nav className="rail" aria-label="Bereiche">
-      <div className="rail__logo" aria-hidden>
-        <ChartIcon width={22} height={22} />
-      </div>
       <ul className="rail__list">
         {items.map((item) => {
           const Icon = item.icon

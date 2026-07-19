@@ -22,7 +22,7 @@ export default function App() {
         <div className="shell">
           <TopBar theme={theme} onToggleTheme={toggle} quotes={stocks.quotes} />
 
-          {active === 'home' ? (
+          {active === 'home' || active === 'stocks' ? (
             <MarketsSection
               quotes={stocks.quotes}
               loading={stocks.loading}
