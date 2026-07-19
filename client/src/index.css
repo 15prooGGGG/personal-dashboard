@@ -619,6 +619,10 @@ a {
 .mail__sender {
   font-weight: 600;
 }
+.mail__tag {
+  margin-right: 6px;
+  vertical-align: 1px;
+}
 .mail__subject {
   margin: 2px 0 0;
   font-size: 0.9rem;

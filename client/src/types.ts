@@ -70,8 +70,8 @@ export interface MailItem {
   id: string
   sender: string
   subject: string
-  preview: string
   receivedAt: string
+  topic?: string
 }
 export type SubstitutionKind = 'cancelled' | 'room-change' | 'substitution'
 export interface SubstitutionEntry {

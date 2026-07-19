@@ -39,7 +39,10 @@ export default function MailSection() {
           {data.mails.map((mail) => (
             <li className="mail" key={mail.id}>
               <div className="mail__top">
-                <span className="mail__sender">{mail.sender}</span>
+                <span className="mail__sender">
+                  {mail.topic && <span className="tag mail__tag">{mail.topic}</span>}
+                  {mail.sender}
+                </span>
                 <span className="muted data">{relativeTime(mail.receivedAt)}</span>
               </div>
               <p className="mail__subject">{mail.subject}</p>
