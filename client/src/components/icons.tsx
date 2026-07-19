@@ -82,3 +82,22 @@ export const MoonIcon = (p: P) => (
     <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
   </svg>
 )
+export const HomeIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3 10.5 12 3l9 7.5" />
+    <path d="M5 9.5V20h14V9.5" />
+    <path d="M10 20v-5h4v5" />
+  </svg>
+)
+export const TodoIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="m8 12 3 3 5-6" />
+  </svg>
+)
+export const ChartIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 4v16h16" />
+    <path d="m7 14 3-3 3 3 4-5" />
+  </svg>
+)

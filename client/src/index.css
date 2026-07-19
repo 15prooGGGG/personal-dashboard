@@ -103,6 +103,158 @@ a {
   padding: 1.75rem 1.5rem 3rem;
 }
 
+/* App-Layout mit linker Leiste --------------------------------------------- */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.main {
+  flex: 1;
+  min-width: 0;
+}
+.rail {
+  flex-shrink: 0;
+  width: 68px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.rail__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rail__item {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.rail__item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.rail__item.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rail__tip {
+  position: absolute;
+  left: 56px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 7px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+.rail__item:hover .rail__tip {
+  opacity: 1;
+}
+
+/* Platzhalter-Bereich ------------------------------------------------------- */
+.placeholder {
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.placeholder__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placeholder__title {
+  margin: 0.4rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.placeholder__text {
+  margin: 0;
+  color: var(--muted);
+  max-width: 380px;
+}
+.placeholder__skeleton {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+.placeholder__skeleton > .skeleton {
+  height: 44px;
+}
+
+@media (max-width: 760px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  .rail {
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    padding: 8px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .rail__logo {
+    display: none;
+  }
+  .rail__list {
+    flex-direction: row;
+  }
+  .rail__tip {
+    display: none;
+  }
+}
+
 /* Banner-Header ------------------------------------------------------------ */
 .banner {
   position: relative;
