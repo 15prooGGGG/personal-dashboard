@@ -874,6 +874,73 @@ code {
   color: var(--muted);
 }
 
+/* Kalender-Prioritätsliste -------------------------------------------------- */
+.calrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.list .calrow:last-child {
+  border-bottom: 0;
+}
+.calrow__main {
+  flex: 1;
+  min-width: 0;
+}
+.calrow__meta {
+  font-size: 0.8rem;
+}
+.calrow__cd {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.calrow__cd.is-urgent {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.caltag {
+  flex-shrink: 0;
+  width: 108px;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+}
+.caltag--p1 {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.caltag--p2 {
+  color: #8257e6;
+  background: color-mix(in srgb, #8257e6 14%, transparent);
+  border-color: color-mix(in srgb, #8257e6 35%, transparent);
+}
+.caltag--p3 {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+@media (max-width: 560px) {
+  .caltag {
+    width: 84px;
+    font-size: 0.56rem;
+  }
+}
+
 /* Responsive --------------------------------------------------------------- */
 @media (max-width: 560px) {
   .shell {

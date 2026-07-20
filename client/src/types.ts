@@ -59,6 +59,10 @@ export interface CalendarEvent {
   end?: string | null
   location?: string
   allDay?: boolean
+  recurring?: boolean
+  school?: boolean
+  priority?: number
+  priorityLabel?: string
 }
 export interface Todo {
   id: string

@@ -2,6 +2,7 @@ import PageSection from '../components/PageSection.tsx'
 import NotConnected from '../components/NotConnected.tsx'
 import { CalendarIcon } from '../components/icons.tsx'
 import { useApi } from '../lib/useApi.ts'
+import { countdownLabel, daysUntil } from '../lib/time.ts'
 import type { CalendarEvent } from '../types.ts'
 
 interface CalendarResponse {
@@ -10,17 +11,12 @@ interface CalendarResponse {
   error?: string
 }
 
-function dayLabel(iso: string): string {
-  const d = new Date(iso)
-  const today = new Date()
-  const diff = Math.round(
-    (new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() -
-      new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
-      86_400_000
-  )
-  if (diff === 0) return 'Heute'
-  if (diff === 1) return 'Morgen'
-  return d.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })
+function whenLabel(ev: CalendarEvent): string {
+  const d = new Date(ev.start)
+  const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
+  if (ev.allDay) return `${day} · ganztägig`
+  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  return `${day} · ${time}`
 }
 
 export default function CalendarSection() {
@@ -44,45 +40,31 @@ export default function CalendarSection() {
     )
   else if (data.events.length === 0)
     body = <div className="state">Keine Termine in den nächsten 14 Tagen.</div>
-  else {
-    // Nach Tag gruppieren.
-    const groups = new Map<string, CalendarEvent[]>()
-    for (const ev of data.events) {
-      const key = dayLabel(ev.start)
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push(ev)
-    }
+  else
     body = (
       <div className="card">
-        {[...groups.entries()].map(([day, events]) => (
-          <div key={day} className="daygroup">
-            <div className="daygroup__label">{day}</div>
-            <ul className="list">
-              {events.map((ev) => (
-                <li className="row" key={ev.id}>
-                  <span className="row__time data">
-                    {ev.allDay
-                      ? 'ganztägig'
-                      : new Date(ev.start).toLocaleTimeString('de-DE', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                  </span>
-                  <span className="row__main">
-                    <span className="row__title">{ev.title}</span>
-                    {ev.location && <span className="muted"> · {ev.location}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <ul className="list">
+          {data.events.map((ev) => (
+            <li className="calrow" key={`${ev.id}-${ev.start}`}>
+              <span className={`caltag caltag--p${ev.priority ?? 3}`}>{ev.priorityLabel}</span>
+              <div className="calrow__main">
+                <div className="row__title">{ev.title}</div>
+                <div className="muted calrow__meta">
+                  {whenLabel(ev)}
+                  {ev.location ? ` · ${ev.location}` : ''}
+                </div>
+              </div>
+              <span className={`calrow__cd data ${daysUntil(ev.start) <= 1 ? 'is-urgent' : ''}`}>
+                {countdownLabel(ev.start)}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     )
-  }
 
   return (
-    <PageSection title="Kalender" icon={CalendarIcon} note="iCloud · nächste 14 Tage">
+    <PageSection title="Kalender" icon={CalendarIcon} note="nach Priorität · nächste 14 Tage">
       {body}
     </PageSection>
   )
