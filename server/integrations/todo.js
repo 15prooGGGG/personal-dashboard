@@ -1,7 +1,8 @@
 // To-Do via Notion. Zugangsdaten: interner Integrations-Token + Datenbank-ID.
 // Die Notion-Datenbank muss für die Integration freigegeben sein.
 // Erwartet: eine Titel-Eigenschaft (Aufgabe), optional Checkbox/Status
-// (erledigt) und ein Datum (Fällig).
+// (erledigt) und ein Datum (fällig). Unterstützt die neue Notion-API
+// (Data Sources) mit Fallback auf die klassische databases.query.
 import { config, isConfigured } from '../config.js'
 
 const TTL = 2 * 60 * 1000
@@ -25,6 +26,20 @@ function mapPage(page) {
   return { id: page.id, title, done, due }
 }
 
+// Fragt die Datenbank ab – neue API (Data Sources) mit Fallback.
+async function queryDatabase(notion, databaseId) {
+  try {
+    const db = await notion.databases.retrieve({ database_id: databaseId })
+    const dataSourceId = db?.data_sources?.[0]?.id
+    if (dataSourceId && notion.dataSources?.query) {
+      return await notion.dataSources.query({ data_source_id: dataSourceId, page_size: 50 })
+    }
+  } catch {
+    // ignorieren und klassisch versuchen
+  }
+  return await notion.databases.query({ database_id: databaseId, page_size: 50 })
+}
+
 export async function fetchTodos() {
   if (!isConfigured.notion) return { configured: false, tasks: [] }
   if (cache && Date.now() - cache.ts < TTL) return cache.value
@@ -32,10 +47,7 @@ export async function fetchTodos() {
   try {
     const { Client } = await import('@notionhq/client')
     const notion = new Client({ auth: config.notion.token })
-    const res = await notion.databases.query({
-      database_id: config.notion.databaseId,
-      page_size: 25
-    })
+    const res = await queryDatabase(notion, config.notion.databaseId)
     const tasks = (res.results || []).map(mapPage).filter(Boolean)
     const value = { configured: true, tasks }
     cache = { value, ts: Date.now() }

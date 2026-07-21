@@ -35,7 +35,13 @@ export default function TodoSection() {
       />
     )
   else {
-    const open = data.tasks.filter((t) => !t.done)
+    const open = data.tasks
+      .filter((t) => !t.done)
+      .sort((a, b) => {
+        if (!a.due) return 1
+        if (!b.due) return -1
+        return +new Date(a.due) - +new Date(b.due)
+      })
     if (open.length === 0) body = <div className="state">Alles erledigt.</div>
     else
       body = (
