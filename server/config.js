@@ -32,10 +32,6 @@ export const config = {
     username: env('ICLOUD_IMAP_USERNAME'),
     password: env('ICLOUD_IMAP_APP_PASSWORD')
   },
-  notion: {
-    token: env('NOTION_TOKEN'),
-    databaseId: env('NOTION_TODO_DATABASE_ID')
-  },
   news: {
     world: list('NEWS_FEEDS', ['https://www.tagesschau.de/index~rss2.xml']),
     finance: list('FINANCE_FEEDS', [
@@ -47,6 +43,5 @@ export const config = {
 
 export const isConfigured = {
   calendar: Boolean(config.calendar.username && config.calendar.password),
-  mail: Boolean(config.mail.username && config.mail.password),
-  notion: Boolean(config.notion.token && config.notion.databaseId)
+  mail: Boolean(config.mail.username && config.mail.password)
 }

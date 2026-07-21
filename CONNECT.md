@@ -46,24 +46,7 @@ ganze Posteingang.
    ```
 3. In der Mail-App wichtige Nachrichten mit der **Flagge** markieren.
 
-## 3) To-Do (Notion)
-
-1. [notion.so/my-integrations](https://www.notion.so/my-integrations) → **New
-   integration** → Typ **Internal** → **Internal Integration Token** kopieren.
-2. Deine To-Do-Datenbank in Notion öffnen → **…** (oben rechts) →
-   **Verbindungen** → deine Integration hinzufügen.
-3. **Datenbank-ID**: aus der URL der Datenbank der 32-stellige Teil
-   (`notion.so/<workspace>/<DIESE_ID>?v=…`).
-4. In die `.env`:
-   ```
-   NOTION_TOKEN=ntn_....
-   NOTION_TODO_DATABASE_ID=der32stelligeId
-   ```
-
-Erwartet wird eine **Titel**-Spalte (Aufgabe); optional eine **Checkbox**/
-**Status**-Spalte (erledigt) und eine **Datum**-Spalte (fällig).
-
-## 4) News & Finanznews (RSS)
+## 3) News & Finanznews (RSS)
 
 Läuft ohne Zugangsdaten mit Standard-Feeds (Tagesschau, Handelsblatt). Eigene
 Quellen optional:

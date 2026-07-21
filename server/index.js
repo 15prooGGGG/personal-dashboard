@@ -7,7 +7,6 @@ import { isConfigured } from './config.js'
 import { fetchNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
-import { fetchTodos } from './integrations/todo.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -27,7 +26,6 @@ app.get('/api/services', (req, res) => {
   res.json({
     calendar: isConfigured.calendar,
     mail: isConfigured.mail,
-    todo: isConfigured.notion,
     news: true
   })
 })
@@ -49,9 +47,6 @@ app.get('/api/calendar', async (req, res) => {
 })
 app.get('/api/mail', async (req, res) => {
   res.json(await fetchImportantMails())
-})
-app.get('/api/todo', async (req, res) => {
-  res.json(await fetchTodos())
 })
 
 // Aktuelle Kurse der Watchlist (echte, verzögerte Daten via Yahoo).
