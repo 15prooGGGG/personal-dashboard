@@ -5,6 +5,7 @@ import PlaceholderSection from './components/PlaceholderSection.tsx'
 import MarketsSection from './modules/MarketsSection.tsx'
 import CalendarSection from './modules/CalendarSection.tsx'
 import MailSection from './modules/MailSection.tsx'
+import TodoSection from './modules/TodoSection.tsx'
 import NewsSection from './modules/NewsSection.tsx'
 import { GlobeIcon, TrendingIcon } from './components/icons.tsx'
 import { NAV } from './nav.tsx'
@@ -38,6 +39,8 @@ export default function App() {
         return <NewsSection type="world" title="News" icon={GlobeIcon} />
       case 'finance':
         return <NewsSection type="finance" title="Finanznews" icon={TrendingIcon} />
+      case 'todo':
+        return <TodoSection />
       default:
         return <PlaceholderSection item={activeItem} />
     }

@@ -64,6 +64,13 @@ export interface CalendarEvent {
   priority?: number
   priorityLabel?: string
 }
+export interface Todo {
+  id: string
+  text: string
+  done: boolean
+  createdDate: string
+  completedDate: string | null
+}
 export interface MailItem {
   id: string
   sender: string

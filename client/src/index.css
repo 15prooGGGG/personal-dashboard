@@ -851,27 +851,106 @@ code {
   margin-bottom: 0.5rem;
 }
 
-/* To-Do -------------------------------------------------------------------- */
-.todo {
+/* To-Do (eigene Liste) ------------------------------------------------------ */
+.todoadd {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.todoadd input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+.todoadd input::placeholder {
+  color: var(--muted);
+}
+.todoadd button {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.todoadd button:hover {
+  filter: brightness(1.08);
+}
+.todoitem {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
 }
-.todo__box {
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
-  border: 2px solid var(--border-strong);
+.list .todoitem:last-child {
+  border-bottom: 0;
+}
+.todocheck {
   flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 7px;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.todo__title {
+.todocheck:hover {
+  border-color: var(--accent);
+}
+.todocheck.is-done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.todotext {
   flex: 1;
-  font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-.todo__due {
-  font-size: 0.8rem;
+.todotext.is-done {
+  text-decoration: line-through;
   color: var(--muted);
+}
+.tododel {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.todoitem:hover .tododel,
+.tododel:focus-visible {
+  opacity: 1;
+}
+.tododel:hover {
+  color: var(--down);
+}
+.todohint {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
 }
 
 /* Kalender-Prioritätsliste -------------------------------------------------- */

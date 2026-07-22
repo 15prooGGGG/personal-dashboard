@@ -7,6 +7,7 @@ import { isConfigured } from './config.js'
 import { fetchNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
+import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -47,6 +48,25 @@ app.get('/api/calendar', async (req, res) => {
 })
 app.get('/api/mail', async (req, res) => {
   res.json(await fetchImportantMails())
+})
+
+// Eigene To-Do-Liste (serverseitig gespeichert).
+app.get('/api/todos', (req, res) => {
+  res.json({ todos: getTodos() })
+})
+app.post('/api/todos', (req, res) => {
+  const text = String(req.body?.text || '').trim()
+  if (!text) return res.status(400).json({ error: 'Text fehlt' })
+  res.status(201).json(addTodo(text))
+})
+app.patch('/api/todos/:id', (req, res) => {
+  const todo = setDone(req.params.id, Boolean(req.body?.done))
+  if (!todo) return res.status(404).json({ error: 'Nicht gefunden' })
+  res.json(todo)
+})
+app.delete('/api/todos/:id', (req, res) => {
+  deleteTodo(req.params.id)
+  res.status(204).end()
 })
 
 // Aktuelle Kurse der Watchlist (echte, verzögerte Daten via Yahoo).
