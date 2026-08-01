@@ -19,14 +19,14 @@ export default function NewsSection({
   )
 
   return (
-    <PageSection title={title} icon={icon} note="RSS · aktualisiert stündlich">
+    <PageSection title={title} icon={icon} note="RSS · stündlich aktualisiert">
       <div className="card">
         {loading ? (
           <div className="state">Lädt …</div>
         ) : error ? (
           <div className="state">{error}</div>
         ) : (
-          <ul className="list">
+          <ul className="rows">
             {(data?.items ?? []).map((n) => (
               <li key={n.id}>
                 <a className="news" href={n.url} target="_blank" rel="noopener noreferrer">

@@ -15,8 +15,7 @@ function whenLabel(ev: CalendarEvent): string {
   const d = new Date(ev.start)
   const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
   if (ev.allDay) return `${day} · ganztägig`
-  const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-  return `${day} · ${time}`
+  return `${day} · ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
 }
 
 export default function CalendarSection() {
@@ -33,7 +32,7 @@ export default function CalendarSection() {
         steps={[
           'appleid.apple.com öffnen → Anmeldung & Sicherheit → App-spezifische Passwörter.',
           'Neues Passwort z. B. "Dashboard" erzeugen.',
-          'Apple-ID (E-Mail) und das erzeugte Passwort unten eintragen.'
+          'Apple-ID und das erzeugte Passwort unten eintragen.'
         ]}
         envVars={['ICLOUD_CALDAV_USERNAME', 'ICLOUD_CALDAV_APP_PASSWORD']}
       />
@@ -43,18 +42,18 @@ export default function CalendarSection() {
   else
     body = (
       <div className="card">
-        <ul className="list">
+        <ul className="rows">
           {data.events.map((ev) => (
-            <li className="calrow" key={`${ev.id}-${ev.start}`}>
-              <span className={`caltag caltag--p${ev.priority ?? 3}`}>{ev.priorityLabel}</span>
-              <div className="calrow__main">
+            <li className="row" key={`${ev.id}-${ev.start}`}>
+              <span className={`chip chip--p${ev.priority ?? 3}`}>{ev.priorityLabel}</span>
+              <div className="row__main">
                 <div className="row__title">{ev.title}</div>
-                <div className="muted calrow__meta">
+                <div className="row__meta">
                   {whenLabel(ev)}
                   {ev.location ? ` · ${ev.location}` : ''}
                 </div>
               </div>
-              <span className={`calrow__cd data ${daysUntil(ev.start) <= 1 ? 'is-urgent' : ''}`}>
+              <span className={`cd ${daysUntil(ev.start) <= 1 ? 'is-soon' : ''}`}>
                 {countdownLabel(ev.start)}
               </span>
             </li>

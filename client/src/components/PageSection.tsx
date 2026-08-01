@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { IconComponent } from '../types.ts'
 
-// Einheitlicher Kopf + Rahmen für einen Bereich (Kalender, Mail, News, …).
+// Einheitlicher Kopf für einen Bereich (Kalender, Mail, News, To-Do).
 export default function PageSection({
   title,
   icon: Icon,
@@ -14,17 +14,17 @@ export default function PageSection({
   children: ReactNode
 }) {
   return (
-    <section className="section">
-      <div className="section__head">
-        <h2 className="section__title section__title--icon">
+    <section className="sec">
+      <div className="sec__head">
+        <h2 className="sec__title">
           {Icon && (
-            <span className="section__icon">
+            <span className="sec__icon">
               <Icon width={18} height={18} />
             </span>
           )}
           {title}
         </h2>
-        {note && <span className="section__note">{note}</span>}
+        {note && <span className="sec__note">{note}</span>}
       </div>
       {children}
     </section>

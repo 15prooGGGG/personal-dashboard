@@ -10,7 +10,11 @@ export function formatCurrency(value: number, currency = 'EUR'): string {
 
 export function formatPercent(value: number): string {
   const sign = value > 0 ? '+' : value < 0 ? '−' : ''
-  return `${sign}${Math.abs(value).toFixed(2)} %`
+  const num = new Intl.NumberFormat('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(value))
+  return `${sign}${num} %`
 }
 
 export function formatNumber(value: number): string {

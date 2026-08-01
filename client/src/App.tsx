@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Rail from './components/Rail.tsx'
 import TopBar from './components/TopBar.tsx'
 import PlaceholderSection from './components/PlaceholderSection.tsx'
+import OverviewSection from './modules/OverviewSection.tsx'
 import MarketsSection from './modules/MarketsSection.tsx'
 import CalendarSection from './modules/CalendarSection.tsx'
 import MailSection from './modules/MailSection.tsx'
@@ -16,12 +17,14 @@ export default function App() {
   const { theme, toggle } = useTheme()
   const stocks = useStocks()
   const [active, setActive] = useState('home')
+  const [collapsed, setCollapsed] = useState(false)
 
   const activeItem = NAV.find((n) => n.id === active) ?? NAV[0]
 
   function renderSection() {
     switch (active) {
       case 'home':
+        return <OverviewSection quotes={stocks.quotes} onOpen={setActive} />
       case 'stocks':
         return (
           <MarketsSection
@@ -47,15 +50,20 @@ export default function App() {
   }
 
   return (
-    <div className="app-layout">
-      <Rail items={NAV} activeId={active} onSelect={setActive} />
-
-      <main className="main">
-        <div className="shell">
-          <TopBar theme={theme} onToggleTheme={toggle} quotes={stocks.quotes} />
+    <div className="app">
+      <div className="shell">
+        <Rail
+          items={NAV}
+          activeId={active}
+          onSelect={setActive}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((c) => !c)}
+        />
+        <main className="main">
+          <TopBar theme={theme} onToggleTheme={toggle} />
           {renderSection()}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

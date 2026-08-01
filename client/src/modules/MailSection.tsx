@@ -23,27 +23,27 @@ export default function MailSection() {
         name="iCloud Mail"
         errorDetail={data?.error}
         steps={[
-          'appleid.apple.com → App-spezifisches Passwort erzeugen (oder das vom Kalender wiederverwenden).',
+          'appleid.apple.com → App-spezifisches Passwort erzeugen.',
           'iCloud-Adresse und Passwort unten eintragen.',
-          'In Mail wichtige Nachrichten mit der Flagge markieren – nur diese werden gezeigt.'
+          'Themen in server/mail-filters.js anpassen; geflaggte Mails erscheinen immer.'
         ]}
         envVars={['ICLOUD_IMAP_USERNAME', 'ICLOUD_IMAP_APP_PASSWORD']}
       />
     )
   else if (data.mails.length === 0)
-    body = <div className="state">Keine als wichtig markierten Mails.</div>
+    body = <div className="state">Nichts Wichtiges im Posteingang.</div>
   else
     body = (
       <div className="card">
-        <ul className="list">
+        <ul className="rows">
           {data.mails.map((mail) => (
             <li className="mail" key={mail.id}>
               <div className="mail__top">
-                <span className="mail__sender">
-                  {mail.topic && <span className="tag mail__tag">{mail.topic}</span>}
-                  {mail.sender}
+                <span className="mail__from">
+                  {mail.topic && <span className="badge">{mail.topic}</span>}
+                  <span className="mail__name">{mail.sender}</span>
                 </span>
-                <span className="muted data">{relativeTime(mail.receivedAt)}</span>
+                <span>{relativeTime(mail.receivedAt)}</span>
               </div>
               <p className="mail__subject">{mail.subject}</p>
             </li>
@@ -53,7 +53,7 @@ export default function MailSection() {
     )
 
   return (
-    <PageSection title="Wichtige Mails" icon={MailIcon} note="iCloud · nur geflaggte">
+    <PageSection title="Wichtige Mails" icon={MailIcon} note="iCloud · nach Themen gefiltert">
       {body}
     </PageSection>
   )

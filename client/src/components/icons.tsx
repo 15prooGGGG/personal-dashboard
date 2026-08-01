@@ -95,6 +95,20 @@ export const TodoIcon = (p: P) => (
     <path d="m8 12 3 3 5-6" />
   </svg>
 )
+// Wortmarke: aufgehende Linie über dem Horizont – Morgen + Märkte.
+export const LogoMark = (p: P) => (
+  <svg {...base(p)} strokeWidth={2}>
+    <path d="M4 17h16" />
+    <path d="m5 13 4-4 3 3 6-6" />
+    <path d="M15 6h4v4" />
+  </svg>
+)
+export const CollapseIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+    <path d="M9.5 4.5v15" />
+  </svg>
+)
 export const ChartIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M4 4v16h16" />

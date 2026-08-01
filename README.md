@@ -1,6 +1,6 @@
 # Morgen-Briefing – Personal Dashboard
 
-Persönliches Dashboard („Clean Analytics"-Look, hell + dunkel) mit **echten,
+Persönliches Dashboard („Soft Canvas / Lime"-Look, hell + dunkel) mit **echten,
 verzögerten Börsenkursen** und interaktivem Chart. Links eine Icon-Leiste zum
 Wechseln zwischen Bereichen (Übersicht, Kalender, E-Mail, News, Finanznews,
 To-Do); noch nicht gebaute Bereiche zeigen eine Platzhalter-Seite.
@@ -24,13 +24,12 @@ ersetzen.
 
 ```
 client/
-  public/banner.jpg       # Banner-Bild (durch eigenes ersetzbar)
   src/
-    App.tsx               # Layout: Rail + Banner + aktiver Bereich
+    App.tsx               # Layout: Shell + Sidebar + aktiver Bereich
     nav.tsx               # ← Bereiche der linken Leiste (Registry)
     index.css             # Design-Tokens (hell/dunkel) + Komponenten
     lib/                  # useTheme, useStocks/useHistory, time, format
-    components/           # Rail, TopBar (Banner), PlaceholderSection, icons
+    components/           # Rail (Sidebar), TopBar, PriceChart, icons
     modules/
       MarketsSection.tsx  # Kurse (echt) + interaktiver Recharts-Chart
 server/
@@ -55,10 +54,12 @@ docker compose up -d --build
 Erreichbar unter **http://<server-ip>:3000**. `restart: unless-stopped`
 startet den Container nach Reboot automatisch neu.
 
-## Banner-Bild ersetzen
+## Design
 
-Eigenes Bild als `client/public/banner.jpg` ablegen (quer, z. B. ~1600×400),
-dann neu bauen. Ein dunkler Verlauf über dem Bild hält die Schrift lesbar.
+Weiche neutrale Fläche, darauf ein schwebender Container mit Bento-Karten.
+Ein Akzent (Lime) für Daten und Aktiv-Zustände, primäre Aktionen in Ink.
+Signature: 45°-schraffierte Datenflächen. Schriften: Outfit (Zahlen/Titel) +
+Inter (UI). Tokens siehe `client/src/index.css`.
 
 ## Einen neuen Bereich (linke Leiste) hinzufügen
 

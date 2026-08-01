@@ -20,13 +20,20 @@ export async function fetchNews(type) {
   const results = await Promise.allSettled(feeds.map((url) => parser.parseURL(url)))
 
   const items = []
+  const seen = new Set()
   for (const r of results) {
     if (r.status !== 'fulfilled') continue
-    const source = r.value.title || ''
+    // Feed-Titel sind oft lange Slogans ("tagesschau.de - die erste Adresse …")
+    // – auf den Namen vor dem ersten Trennzeichen kürzen.
+    const source = (r.value.title || '').split(/\s[-–|]\s/)[0].trim()
     for (const it of r.value.items || []) {
+      const title = (it.title || '').trim()
+      const key = title.toLowerCase()
+      if (!title || seen.has(key)) continue
+      seen.add(key)
       items.push({
-        id: it.guid || it.link || it.title,
-        title: it.title || '',
+        id: it.guid || it.link || title,
+        title,
         source,
         url: it.link || '#',
         publishedAt: it.isoDate || it.pubDate || null
