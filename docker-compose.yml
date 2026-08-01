@@ -15,12 +15,37 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DATA_DIR=/app/data
-    # Persistente To-Do-Liste (überlebt Rebuilds/Neustarts).
+      - VAULT_DIR=/app/vault
     volumes:
+      # Persistente To-Do-Liste (überlebt Rebuilds/Neustarts).
       - ./data:/app/data
+      # Obsidian-Vault, per Syncthing vom Mac gespiegelt. Nur lesend – das
+      # Dashboard fasst deine Notizen nicht an.
+      - ./vault:/app/vault:ro
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      # 127.0.0.1 statt localhost: localhost löst im Container zuerst nach
+      # IPv6 (::1) auf, der Server lauscht aber auf IPv4 – das ergab einen
+      # falschen "unhealthy"-Status.
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Hält den Obsidian-Vault zwischen Mac und Server synchron.
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: personal-dashboard-syncthing
+    restart: unless-stopped
+    hostname: dashboard-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./syncthing-config:/var/syncthing/config
+      - ./vault:/var/syncthing/vault
+    ports:
+      - "8384:8384"     # Weboberfläche (Einrichtung)
+      - "22000:22000/tcp" # Datenübertragung
+      - "22000:22000/udp"
+      - "21027:21027/udp" # Geräte-Erkennung im LAN

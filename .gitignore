@@ -20,3 +20,7 @@ Thumbs.db
 
 # Persistente Daten (To-Do-Liste)
 /data/
+
+# Obsidian-Vault (persönliche Notizen) + Syncthing-Konfiguration
+/vault/
+/syncthing-config/
