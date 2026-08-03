@@ -16,7 +16,10 @@ Express-Server liefert das Frontend **und** kapselt die Kursquelle
 | ------- | ------ | ------ |
 | **Aktienkurse** (Nordex, iShares Nasdaq 100, iShares MSCI World) | Yahoo Finance über `server/stocks.js` | **echt**, ~15 Min verzögert |
 | **Watchlist** (eigene Auswahl, durchsuchbar) | Finnhub über `server/integrations/finnhub.js` | **echt**, Echtzeit für US-Börsen |
-| Kalender, E-Mail, News, Finanznews, To-Do | – | noch leer (Platzhalter) |
+| Kalender, Wichtige Mails | iCloud (CalDAV/IMAP) | **echt** |
+| News, Finanznews | RSS (Tagesschau, Handelsblatt) | **echt** |
+| To-Do | eigene Liste, `data/todos.json` | **echt** |
+| **Second Brain** | Obsidian-Vault via Syncthing (`vault/`, nur lesend) | **echt** |
 
 Feste Watchlist der Sektion „Aktien" anpassen: `WATCHLIST` in
 `server/stocks.js`. Späterer Wechsel auf einen bezahlten Echtzeit-Anbieter:
@@ -39,12 +42,14 @@ client/
     modules/
       MarketsSection.tsx    # Kurse (echt) + interaktiver Recharts-Chart
       WatchlistSection.tsx  # Symbolsuche + eigene Watchlist (Finnhub)
+      VaultSection.tsx      # Aufgaben + Projekte aus dem Obsidian-Vault
 server/
   index.js                # Express: /api/stocks, /api/watchlist, … + Static
   stocks.js               # Yahoo-Client (Session + Cache)
   watchlist-store.js      # Watchlist-Auswahl als JSON (Docker-Volume)
   integrations/
     finnhub.js            # Finnhub-Client: Symbolsuche + Kurse (Cache)
+    obsidian.js           # Vault-Parser: Aufgaben, Projekte, Frontmatter
 Dockerfile, docker-compose.yml
 ```
 

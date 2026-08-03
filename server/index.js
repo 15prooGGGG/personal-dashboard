@@ -8,6 +8,7 @@ import { fetchNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
 import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
+import { getVault } from './integrations/obsidian.js'
 // fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
 // bleibt, welche Quelle gemeint ist (stocks.js = Yahoo, finnhub.js = Watchlist).
 import {
@@ -51,7 +52,17 @@ app.get('/api/news', async (req, res) => {
   }
 })
 
-// Kalender / Mail / To-Do liefern selbst einen { configured, ... }-Status.
+// Obsidian-Vault (nur lesend, per Syncthing gespiegelt).
+app.get('/api/vault', (req, res) => {
+  try {
+    res.json(getVault())
+  } catch (err) {
+    console.error('vault error:', err.message)
+    res.status(500).json({ configured: false, reason: 'error' })
+  }
+})
+
+// Kalender / Mail liefern selbst einen { configured, ... }-Status.
 app.get('/api/calendar', async (req, res) => {
   res.json(await fetchCalendarEvents())
 })

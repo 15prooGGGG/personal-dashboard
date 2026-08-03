@@ -103,6 +103,13 @@ export const LogoMark = (p: P) => (
     <path d="M15 6h4v4" />
   </svg>
 )
+// Second Brain: aufgeschlagenes Notizbuch.
+export const VaultIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 7.5C10.5 6 8.5 5.5 4 5.5v12c4.5 0 6.5.5 8 2 1.5-1.5 3.5-2 8-2v-12c-4.5 0-6.5.5-8 2Z" />
+    <path d="M12 7.5v12" />
+  </svg>
+)
 export const CollapseIcon = (p: P) => (
   <svg {...base(p)}>
     <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
