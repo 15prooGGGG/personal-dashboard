@@ -70,10 +70,10 @@ export default function PriceChart({ symbol, range, interval, small }: PriceChar
           <Area
             type="monotone"
             dataKey="close"
-            stroke="var(--lime-deep)"
+            stroke="var(--accent-deep)"
             strokeWidth={2}
             fill="url(#hatch)"
-            activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)', fill: 'var(--lime-deep)' }}
+            activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)', fill: 'var(--accent-deep)' }}
             isAnimationActive={false}
           />
         </AreaChart>

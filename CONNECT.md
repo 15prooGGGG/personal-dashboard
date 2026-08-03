@@ -56,6 +56,25 @@ NEWS_FEEDS=https://feed-a.xml,https://feed-b.xml
 FINANCE_FEEDS=https://feed-c.xml
 ```
 
+## 4) Watchlist-Kurse (Finnhub)
+
+Für die durchsuchbare Watchlist. Kein Bezahlkonto nötig.
+
+1. Kostenlos registrieren auf [finnhub.io/register](https://finnhub.io/register).
+2. Im Finnhub-Dashboard den **API Key** kopieren.
+3. In die `.env`:
+   ```
+   FINNHUB_API_KEY=dein-key
+   ```
+
+Der Key bleibt auf dem Server – das Frontend spricht nur `/api/finnhub/search`
+und `/api/watchlist` an. Deshalb **kein** `VITE_`-Präfix: Variablen mit diesem
+Präfix backt Vite beim Build ins Browser-Bundle, wo sie jeder auslesen kann.
+
+Grenzen des Free-Tiers: 60 Anfragen/Minute, Echtzeitkurse nur für US-Börsen.
+Deutsche Symbole (`.DE`) liefern dort keine Kurse – dafür bleibt die
+Yahoo-Sektion „Aktien" zuständig.
+
 ---
 
 ## Sicherheitshinweise

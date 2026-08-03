@@ -4,6 +4,7 @@ import TopBar from './components/TopBar.tsx'
 import PlaceholderSection from './components/PlaceholderSection.tsx'
 import OverviewSection from './modules/OverviewSection.tsx'
 import MarketsSection from './modules/MarketsSection.tsx'
+import WatchlistSection from './modules/WatchlistSection.tsx'
 import CalendarSection from './modules/CalendarSection.tsx'
 import MailSection from './modules/MailSection.tsx'
 import TodoSection from './modules/TodoSection.tsx'
@@ -34,6 +35,8 @@ export default function App() {
             reload={stocks.reload}
           />
         )
+      case 'watchlist':
+        return <WatchlistSection />
       case 'calendar':
         return <CalendarSection />
       case 'mail':

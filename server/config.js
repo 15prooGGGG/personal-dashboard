@@ -32,6 +32,10 @@ export const config = {
     username: env('ICLOUD_IMAP_USERNAME'),
     password: env('ICLOUD_IMAP_APP_PASSWORD')
   },
+  // Kursdaten für die Watchlist. Kostenlosen Key auf finnhub.io/register holen.
+  finnhub: {
+    apiKey: env('FINNHUB_API_KEY')
+  },
   news: {
     world: list('NEWS_FEEDS', ['https://www.tagesschau.de/index~rss2.xml']),
     finance: list('FINANCE_FEEDS', [
@@ -43,5 +47,6 @@ export const config = {
 
 export const isConfigured = {
   calendar: Boolean(config.calendar.username && config.calendar.password),
-  mail: Boolean(config.mail.username && config.mail.password)
+  mail: Boolean(config.mail.username && config.mail.password),
+  finnhub: Boolean(config.finnhub.apiKey)
 }

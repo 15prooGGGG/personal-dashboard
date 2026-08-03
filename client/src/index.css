@@ -1,7 +1,7 @@
 /* ==========================================================================
-   Morgen-Briefing – Design-System "Soft Canvas / Lime"
+   Morgen-Briefing – Design-System "Soft Canvas / Midnight"
    Weiche neutrale Fläche, darauf ein schwebender Container mit Bento-Karten.
-   Ein Akzent (Lime) nur für Daten und Aktiv-Zustände; primäre Aktionen in Ink.
+   Ein Akzent (Midnight Blue) nur für Daten und Aktiv-Zustände; primäre Aktionen in Ink.
    Signature: schraffierte Datenflächen (45°).
    ========================================================================== */
 
@@ -18,18 +18,18 @@
   --ink-soft: #3c4048;
   --muted: #6f746c;
 
-  --lime: #a3e635;
-  --lime-deep: #5c8a12;
-  --lime-wash: #eef8dc;
+  --accent: #3d5afe;
+  --accent-deep: #1e3a8a;
+  --accent-wash: #e8ecfc;
 
-  --up: #4d9e28;
+  --up: #3b5fe0;
   --down: #e4652f;
   --butter: #fde047;
   --amber: #fb923c;
 
   --on-ink: #ffffff;
-  --hatch-bg: rgba(163, 230, 53, 0.16);
-  --hatch-line: rgba(120, 178, 30, 0.55);
+  --hatch-bg: rgba(61, 90, 254, 0.16);
+  --hatch-line: rgba(30, 58, 138, 0.5);
 
   --shadow-card: 0 1px 2px rgba(20, 22, 26, 0.04), 0 10px 26px -18px rgba(20, 22, 26, 0.35);
   --shadow-shell: 0 2px 6px rgba(20, 22, 26, 0.04), 0 24px 60px -30px rgba(20, 22, 26, 0.28);
@@ -51,16 +51,16 @@
   --ink-soft: #d3d7cc;
   --muted: #969b8f;
 
-  --lime: #a3e635;
-  --lime-deep: #b9ef5c;
-  --lime-wash: rgba(163, 230, 53, 0.12);
+  --accent: #5b7fff;
+  --accent-deep: #93a9ff;
+  --accent-wash: rgba(91, 127, 255, 0.14);
 
-  --up: #8ddb4a;
+  --up: #6e8cff;
   --down: #f0885c;
 
   --on-ink: #14161a;
-  --hatch-bg: rgba(163, 230, 53, 0.13);
-  --hatch-line: rgba(163, 230, 53, 0.42);
+  --hatch-bg: rgba(91, 127, 255, 0.14);
+  --hatch-line: rgba(91, 127, 255, 0.42);
 
   --shadow-card: none;
   --shadow-shell: none;
@@ -77,13 +77,13 @@
     --ink: #f1f3ec;
     --ink-soft: #d3d7cc;
     --muted: #969b8f;
-    --lime-deep: #b9ef5c;
-    --lime-wash: rgba(163, 230, 53, 0.12);
-    --up: #8ddb4a;
+    --accent-deep: #93a9ff;
+    --accent-wash: rgba(91, 127, 255, 0.14);
+    --up: #6e8cff;
     --down: #f0885c;
     --on-ink: #14161a;
-    --hatch-bg: rgba(163, 230, 53, 0.13);
-    --hatch-line: rgba(163, 230, 53, 0.42);
+    --hatch-bg: rgba(91, 127, 255, 0.14);
+    --hatch-line: rgba(91, 127, 255, 0.42);
     --shadow-card: none;
     --shadow-shell: none;
   }
@@ -115,7 +115,7 @@ button {
   font-family: inherit;
 }
 :focus-visible {
-  outline: 2px solid var(--lime-deep);
+  outline: 2px solid var(--accent-deep);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -194,7 +194,7 @@ button {
   flex-shrink: 0;
   border-radius: 9px;
   background: var(--ink);
-  color: var(--lime);
+  color: var(--accent);
   display: grid;
   place-items: center;
 }
@@ -248,7 +248,7 @@ button {
   width: 3px;
   height: 22px;
   border-radius: 0 3px 3px 0;
-  background: var(--lime);
+  background: var(--accent);
 }
 .side__icon {
   display: inline-flex;
@@ -343,8 +343,8 @@ button {
   background: var(--line-strong);
 }
 .statuspill__dot.is-open {
-  background: var(--lime);
-  box-shadow: 0 0 0 3px var(--lime-wash);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
 }
 .iconbtn {
   width: 38px;
@@ -386,7 +386,7 @@ button {
 }
 .sec__icon {
   display: inline-flex;
-  color: var(--lime-deep);
+  color: var(--accent-deep);
 }
 .sec__note {
   font-size: 0.8rem;
@@ -479,7 +479,7 @@ button {
   font-variant-numeric: tabular-nums;
 }
 .delta.up {
-  background: var(--lime-wash);
+  background: var(--accent-wash);
   color: var(--up);
 }
 .delta.down {
@@ -568,8 +568,8 @@ button {
   border-color: var(--line-strong);
 }
 .tile.is-active {
-  border-color: var(--lime-deep);
-  box-shadow: 0 0 0 1px var(--lime-deep), var(--shadow-card);
+  border-color: var(--accent-deep);
+  box-shadow: 0 0 0 1px var(--accent-deep), var(--shadow-card);
 }
 .tile__label {
   font-size: 0.8rem;
@@ -671,19 +671,19 @@ button {
 }
 .chip--p1 {
   background: var(--ink);
-  color: var(--lime);
+  color: var(--accent);
 }
 .chip--p2 {
-  background: var(--lime-wash);
-  color: var(--lime-deep);
+  background: var(--accent-wash);
+  color: var(--accent-deep);
 }
 .badge {
   display: inline-block;
   padding: 2px 8px;
   margin-right: 7px;
   border-radius: 999px;
-  background: var(--lime-wash);
-  color: var(--lime-deep);
+  background: var(--accent-wash);
+  color: var(--accent-deep);
   font-size: 0.68rem;
   font-weight: 600;
 }
@@ -698,8 +698,8 @@ button {
   font-variant-numeric: tabular-nums;
 }
 .cd.is-soon {
-  background: var(--lime-wash);
-  color: var(--lime-deep);
+  background: var(--accent-wash);
+  color: var(--accent-deep);
 }
 
 /* Mail --------------------------------------------------------------------- */
@@ -757,7 +757,7 @@ button {
   padding-top: 0;
 }
 .news:hover {
-  color: var(--lime-deep);
+  color: var(--accent-deep);
 }
 .news__main {
   flex: 1;
@@ -842,11 +842,11 @@ button {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .todo__check:hover {
-  border-color: var(--lime-deep);
+  border-color: var(--accent-deep);
 }
 .todo__check.is-done {
-  background: var(--lime);
-  border-color: var(--lime);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--ink);
 }
 .todo__text {
@@ -887,6 +887,180 @@ button {
   color: var(--muted);
 }
 
+/* Symbolsuche --------------------------------------------------------------- */
+.search__form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border-radius: var(--r-ctl);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.search__form:focus-within {
+  border-color: var(--accent-deep);
+}
+.search__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.search__form input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+}
+.search__form input::placeholder {
+  color: var(--muted);
+}
+.search__form input:focus {
+  outline: none;
+}
+/* Das native Kreuz von type="search" weg – wir haben einen eigenen Button. */
+.search__form input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.search__clear {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.search__clear:hover {
+  color: var(--ink);
+}
+.search__hint {
+  margin: 12px 2px 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.search__results {
+  margin-top: 6px;
+}
+.search__sym {
+  flex-shrink: 0;
+  min-width: 66px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.btn--sm {
+  flex-shrink: 0;
+  padding: 7px 13px;
+  font-size: 0.8rem;
+}
+.btn.is-added {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: default;
+}
+.btn.is-added:hover {
+  opacity: 1;
+}
+
+/* Watchlist ----------------------------------------------------------------- */
+.wl__card {
+  margin-top: 14px;
+}
+.wl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.rows > li:last-child .wl {
+  border-bottom: 0;
+}
+.wl__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wl:hover .todo__del {
+  opacity: 1;
+}
+/* Ohne Hover (Touch) muss der Entfernen-Button dauerhaft sichtbar sein. */
+@media (hover: none) {
+  .wl .todo__del {
+    opacity: 1;
+  }
+}
+.wl__sym {
+  flex-shrink: 0;
+  min-width: 66px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.wl__text {
+  flex: 1;
+  min-width: 0;
+}
+.wl__text .row__title,
+.wl__text .row__meta {
+  display: block;
+}
+.wl__price {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.wl__delta {
+  flex-shrink: 0;
+  min-width: 76px;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.wl__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-ctl);
+  background: var(--surface-2);
+}
+.wl__detail-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.wl__detail-value {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+@media (max-width: 560px) {
+  .wl__delta {
+    min-width: 62px;
+  }
+  .wl__sym,
+  .search__sym {
+    min-width: 54px;
+  }
+}
+
 /* Zustände ------------------------------------------------------------------ */
 .state {
   padding: 22px 16px;
@@ -900,7 +1074,7 @@ button {
   margin-left: 8px;
   border: 0;
   background: none;
-  color: var(--lime-deep);
+  color: var(--accent-deep);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -970,8 +1144,8 @@ code {
   width: 54px;
   height: 54px;
   border-radius: 16px;
-  background: var(--lime-wash);
-  color: var(--lime-deep);
+  background: var(--accent-wash);
+  color: var(--accent-deep);
   display: grid;
   place-items: center;
 }

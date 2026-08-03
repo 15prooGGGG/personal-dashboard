@@ -8,6 +8,14 @@ import { fetchNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
 import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
+// fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
+// bleibt, welche Quelle gemeint ist (stocks.js = Yahoo, finnhub.js = Watchlist).
+import {
+  searchSymbols,
+  fetchQuotes as fetchFinnhubQuotes,
+  isConfigured as finnhubReady
+} from './integrations/finnhub.js'
+import { getWatchlist, addSymbol, removeSymbol } from './watchlist-store.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -27,7 +35,8 @@ app.get('/api/services', (req, res) => {
   res.json({
     calendar: isConfigured.calendar,
     mail: isConfigured.mail,
-    news: true
+    news: true,
+    watchlist: isConfigured.finnhub
   })
 })
 
@@ -94,6 +103,49 @@ app.get('/api/stocks/history', async (req, res) => {
     console.error('history error:', err.message)
     res.status(502).json({ error: 'Verlauf konnte nicht geladen werden' })
   }
+})
+
+// --- Watchlist (Finnhub) ----------------------------------------------------
+// Symbolsuche für das Suchfeld. ?q=apple
+app.get('/api/finnhub/search', async (req, res) => {
+  if (!finnhubReady()) return res.json({ configured: false, results: [] })
+  try {
+    const data = await searchSymbols(req.query.q)
+    res.json({ configured: true, ...data })
+  } catch (err) {
+    console.error('finnhub search error:', err.message)
+    res.status(502).json({ configured: true, error: err.message, results: [] })
+  }
+})
+
+// Gespeicherte Watchlist samt aktuellen Kursen.
+app.get('/api/watchlist', async (req, res) => {
+  const entries = getWatchlist()
+  if (!finnhubReady()) return res.json({ configured: false, items: [] })
+  if (entries.length === 0) return res.json({ configured: true, items: [] })
+
+  try {
+    const quotes = await fetchFinnhubQuotes(entries.map((e) => e.symbol))
+    const bySymbol = new Map(quotes.map((q) => [q.symbol, q]))
+    res.json({
+      configured: true,
+      items: entries.map((e) => ({ ...e, ...(bySymbol.get(e.symbol) || {}) }))
+    })
+  } catch (err) {
+    console.error('watchlist error:', err.message)
+    res.status(502).json({ configured: true, error: err.message, items: [] })
+  }
+})
+
+app.post('/api/watchlist', (req, res) => {
+  const { entry, added, error } = addSymbol(req.body || {})
+  if (error) return res.status(400).json({ error })
+  res.status(added ? 201 : 200).json(entry)
+})
+
+app.delete('/api/watchlist/:symbol', (req, res) => {
+  removeSymbol(req.params.symbol)
+  res.status(204).end()
 })
 
 // ---------------------------------------------------------------------------

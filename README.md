@@ -2,8 +2,9 @@
 
 Persönliches Dashboard („Soft Canvas / Lime"-Look, hell + dunkel) mit **echten,
 verzögerten Börsenkursen** und interaktivem Chart. Links eine Icon-Leiste zum
-Wechseln zwischen Bereichen (Übersicht, Kalender, E-Mail, News, Finanznews,
-To-Do); noch nicht gebaute Bereiche zeigen eine Platzhalter-Seite.
+Wechseln zwischen Bereichen (Übersicht, Aktien, Watchlist, Kalender, E-Mail,
+News, Finanznews, To-Do); noch nicht gebaute Bereiche zeigen eine
+Platzhalter-Seite.
 
 **Stack:** React + Vite + TypeScript, Charts mit Recharts. Ein kleiner
 Express-Server liefert das Frontend **und** kapselt die Kursquelle
@@ -14,11 +15,16 @@ Express-Server liefert das Frontend **und** kapselt die Kursquelle
 | Bereich | Quelle | Status |
 | ------- | ------ | ------ |
 | **Aktienkurse** (Nordex, iShares Nasdaq 100, iShares MSCI World) | Yahoo Finance über `server/stocks.js` | **echt**, ~15 Min verzögert |
+| **Watchlist** (eigene Auswahl, durchsuchbar) | Finnhub über `server/integrations/finnhub.js` | **echt**, Echtzeit für US-Börsen |
 | Kalender, E-Mail, News, Finanznews, To-Do | – | noch leer (Platzhalter) |
 
-Watchlist anpassen: `WATCHLIST` in `server/stocks.js`. Späterer Wechsel auf
-einen bezahlten Echtzeit-Anbieter: nur `fetchQuotes()` / `fetchHistory()`
-ersetzen.
+Feste Watchlist der Sektion „Aktien" anpassen: `WATCHLIST` in
+`server/stocks.js`. Späterer Wechsel auf einen bezahlten Echtzeit-Anbieter:
+nur `fetchQuotes()` / `fetchHistory()` ersetzen.
+
+Die Watchlist-Sektion pflegst du dagegen im Dashboard selbst (Suchfeld →
+„Hinzufügen"); die Auswahl liegt in `data/watchlist.json`. Einrichtung des
+Finnhub-Keys: siehe [CONNECT.md](CONNECT.md).
 
 ## Projektstruktur
 
@@ -28,13 +34,17 @@ client/
     App.tsx               # Layout: Shell + Sidebar + aktiver Bereich
     nav.tsx               # ← Bereiche der linken Leiste (Registry)
     index.css             # Design-Tokens (hell/dunkel) + Komponenten
-    lib/                  # useTheme, useStocks/useHistory, time, format
-    components/           # Rail (Sidebar), TopBar, PriceChart, icons
+    lib/                  # useTheme, useStocks/useHistory, finnhub, time, format
+    components/           # Rail (Sidebar), TopBar, PriceChart, SymbolSearch, icons
     modules/
-      MarketsSection.tsx  # Kurse (echt) + interaktiver Recharts-Chart
+      MarketsSection.tsx    # Kurse (echt) + interaktiver Recharts-Chart
+      WatchlistSection.tsx  # Symbolsuche + eigene Watchlist (Finnhub)
 server/
-  index.js                # Express: /api/stocks, /api/stocks/history, Static
+  index.js                # Express: /api/stocks, /api/watchlist, … + Static
   stocks.js               # Yahoo-Client (Session + Cache)
+  watchlist-store.js      # Watchlist-Auswahl als JSON (Docker-Volume)
+  integrations/
+    finnhub.js            # Finnhub-Client: Symbolsuche + Kurse (Cache)
 Dockerfile, docker-compose.yml
 ```
 

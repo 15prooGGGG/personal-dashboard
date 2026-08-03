@@ -37,6 +37,30 @@ export interface History {
   points: HistoryPoint[]
 }
 
+// Watchlist / Finnhub (vom Backend /api/watchlist, /api/finnhub/search) ------
+export interface SymbolHit {
+  symbol: string
+  display: string
+  name: string
+  type: string
+}
+
+export interface WatchlistEntry {
+  symbol: string
+  name: string
+  type: string
+  addedAt: string
+  price?: number | null
+  change?: number | null
+  changePercent?: number | null
+  high?: number | null
+  low?: number | null
+  open?: number | null
+  previousClose?: number | null
+  marketTime?: number | null
+  error?: string
+}
+
 // Mock-Datenmodelle (übrige Module) ------------------------------------------
 export interface WeatherForecastHour {
   time: string

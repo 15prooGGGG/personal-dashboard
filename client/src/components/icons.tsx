@@ -109,6 +109,11 @@ export const CollapseIcon = (p: P) => (
     <path d="M9.5 4.5v15" />
   </svg>
 )
+export const StarIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m12 3.5 2.6 5.4 5.9.85-4.25 4.15 1 5.9L12 17.05 6.75 19.8l1-5.9L3.5 9.75l5.9-.85Z" />
+  </svg>
+)
 export const ChartIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M4 4v16h16" />
