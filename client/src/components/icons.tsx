@@ -116,6 +116,14 @@ export const CollapseIcon = (p: P) => (
     <path d="M9.5 4.5v15" />
   </svg>
 )
+// Vertretungsplan: Schulgebäude mit Fahne.
+export const SchoolIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 20V10l8-5 8 5v10" />
+    <path d="M2 20h20" />
+    <path d="M9.5 20v-5h5v5" />
+  </svg>
+)
 export const StarIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="m12 3.5 2.6 5.4 5.9.85-4.25 4.15 1 5.9L12 17.05 6.75 19.8l1-5.9L3.5 9.75l5.9-.85Z" />

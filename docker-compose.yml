@@ -32,6 +32,23 @@ services:
       retries: 3
       start_period: 10s
 
+  # Signal-Anbindung für die Push-Nachrichten. Läuft als GEKOPPELTES GERÄT
+  # deines Signal-Accounts (wie Signal Desktop) – keine zweite Rufnummer nötig.
+  # Einrichtung: siehe CONNECT.md. Port 8080 ist nur zum Koppeln nötig; danach
+  # spricht ihn allein das Dashboard über das interne Docker-Netz an.
+  signal:
+    image: bbernhard/signal-cli-rest-api:latest
+    container_name: personal-dashboard-signal
+    restart: unless-stopped
+    environment:
+      # "normal" = gekoppeltes Gerät. "native"/"json-rpc" wären schneller,
+      # brauchen aber eine eigene registrierte Nummer.
+      - MODE=normal
+    volumes:
+      - ./signal-config:/home/.local/share/signal-cli
+    ports:
+      - "127.0.0.1:8080:8080"
+
   # Hält den Obsidian-Vault zwischen Mac und Server synchron.
   syncthing:
     image: syncthing/syncthing:latest

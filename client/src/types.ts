@@ -102,13 +102,56 @@ export interface MailItem {
   receivedAt: string
   topic?: string
 }
-export type SubstitutionKind = 'cancelled' | 'room-change' | 'substitution'
+// Vertretungsplan (vom Backend /api/substitutions, Quelle: Schulportal Hessen).
+// Die Felder kommen aus den data-field-Attributen des Portals; welche davon
+// gefüllt sind, entscheidet die Schule – deshalb ist alles optional. Unbekannte
+// Spalten reicht der Server unter ihrem Originalnamen durch (Index-Signatur).
 export interface SubstitutionEntry {
-  id: string
-  lesson: string
-  subject: string
-  kind: SubstitutionKind
-  note: string
+  lesson?: string
+  subject?: string
+  subjectOld?: string
+  className?: string
+  substitute?: string
+  teacher?: string
+  teacherOld?: string
+  room?: string
+  roomOld?: string
+  kind?: string
+  note?: string
+  [field: string]: string | undefined
+}
+
+// Tagesinfos stehen im Portal in einer eigenen Tabelle neben den Vertretungen:
+// Unterrichtsfrei, Klausuren, Aushänge. Oft die wichtigere Meldung – sie
+// verschiebt den ganzen Tag, taucht aber in keiner Vertretungszeile auf.
+export interface SubstitutionInfo {
+  title: string | null
+  lines: string[]
+}
+
+export interface SubstitutionDay {
+  label: string
+  date: string | null
+  week?: string | null
+  updatedAt?: string | null
+  infos: SubstitutionInfo[]
+  entries: SubstitutionEntry[]
+}
+
+export interface SubstitutionPlan {
+  configured: boolean
+  fetchedAt?: string
+  who?: string | null
+  // ok = es gibt etwas zu zeigen, empty = Portal meldet nichts,
+  // unknown = Markup unklar
+  state?: 'ok' | 'empty' | 'unknown'
+  days: SubstitutionDay[]
+  // Zählt nur Vertretungen. Ein Tag kann total 0 haben und trotzdem
+  // "Unterrichtsfrei, 6 Std." melden – deshalb zusätzlich infoTotal.
+  total: number
+  infoTotal?: number
+  note?: string | null
+  error?: string
 }
 export interface NewsItem {
   id: string

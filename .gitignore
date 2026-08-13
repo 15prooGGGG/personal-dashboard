@@ -24,3 +24,6 @@ Thumbs.db
 # Obsidian-Vault (persönliche Notizen) + Syncthing-Konfiguration
 /vault/
 /syncthing-config/
+
+# Signal-Anbindung (gekoppeltes Geraet, enthaelt Schluesselmaterial)
+/signal-config/

@@ -5,6 +5,7 @@ import PlaceholderSection from './components/PlaceholderSection.tsx'
 import OverviewSection from './modules/OverviewSection.tsx'
 import MarketsSection from './modules/MarketsSection.tsx'
 import WatchlistSection from './modules/WatchlistSection.tsx'
+import SubstitutionsSection from './modules/SubstitutionsSection.tsx'
 import CalendarSection from './modules/CalendarSection.tsx'
 import MailSection from './modules/MailSection.tsx'
 import TodoSection from './modules/TodoSection.tsx'
@@ -38,6 +39,8 @@ export default function App() {
         )
       case 'watchlist':
         return <WatchlistSection />
+      case 'substitutions':
+        return <SubstitutionsSection />
       case 'calendar':
         return <CalendarSection />
       case 'mail':

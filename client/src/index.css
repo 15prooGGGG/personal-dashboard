@@ -1061,6 +1061,137 @@ button {
   }
 }
 
+/* Vertretungsplan ----------------------------------------------------------- */
+.vpday + .vpday {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.vpday__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.vpday__week {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+/* Tagesinfos (Unterrichtsfrei, Klausuren) stehen VOR den Vertretungen und
+   bekommen eine eigene, kräftigere Auszeichnung: Sie verschieben den ganzen
+   Tag, während eine Vertretung nur eine Stunde betrifft. */
+.vpinfos {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.vpinfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--accent-wash);
+  border-left: 3px solid var(--accent-deep);
+  font-size: 0.86rem;
+}
+.vpinfo__title {
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+.vpinfo__lines {
+  color: var(--ink-soft);
+}
+.vp {
+  display: flex;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rows > .vp:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.rows > .vp:first-child {
+  padding-top: 0;
+}
+/* Die Stunde ist der Anker beim Überfliegen – feste Breite, damit die
+   Einträge untereinander auf einer Kante stehen. */
+.vp__lesson {
+  flex-shrink: 0;
+  min-width: 46px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 9px;
+  background: var(--accent-wash);
+  color: var(--accent-deep);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.vp__lesson.is-out {
+  background: var(--surface-2);
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.vp__body {
+  flex: 1;
+  min-width: 0;
+}
+.vp__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.vp__fact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+.vp__fact-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.vp__fact-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.vp__note {
+  margin-top: 3px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+/* Ausfall ist die wichtigste Information – die darf nicht grau untergehen. */
+.vp__note.is-out {
+  color: var(--down);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .vp__facts {
+    gap: 2px 12px;
+  }
+  .vp__lesson {
+    min-width: 40px;
+  }
+}
+
 /* Zustände ------------------------------------------------------------------ */
 .state {
   padding: 22px 16px;
