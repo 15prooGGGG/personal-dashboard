@@ -5,8 +5,7 @@
 // ===========================================================================
 
 // 1) Uhrzeiten der Stunden.
-//    ACHTUNG: Das sind vorläufige Annahmen (übliches hessisches Modell mit
-//    Doppelstunden), NICHT die verifizierten Zeiten der Einhardschule.
+//    Von Lauri bestätigt (14.09.2026).
 export const PERIOD_TIMES = {
   1: ['07:45', '08:30'],
   2: ['08:30', '09:15'],
@@ -26,4 +25,4 @@ export const PERIOD_TIMES = {
 //    Woche. Daraus wird für jedes andere Datum über die KW-Parität abgeleitet.
 //    Auf null setzen, wenn unbekannt – dann zeigt das Dashboard beide Wochen
 //    ohne automatische Auswahl.
-export const WEEK_REFERENCE = { date: '2026-09-14', week: 'A' }
+export const WEEK_REFERENCE = { date: '2026-09-14', week: 'B' }
