@@ -70,7 +70,8 @@ export async function searchSymbols(query) {
       symbol: r.symbol,
       display: r.displaySymbol || r.symbol,
       name: r.description,
-      type: r.type || ''
+      type: r.type || '',
+      source: 'finnhub'
     }))
     .sort((a, b) => Number(a.symbol.includes('.')) - Number(b.symbol.includes('.')))
     .slice(0, 12)
@@ -106,7 +107,10 @@ export async function fetchQuote(symbol) {
       low: known ? q.l ?? null : null,
       open: known ? q.o ?? null : null,
       previousClose: known ? q.pc ?? null : null,
-      marketTime: q.t || null
+      marketTime: q.t || null,
+      // Free-Tier liefert nur US-Börsen; CoinGecko rechnet dagegen in EUR.
+      // Jeder Kurs führt seine Währung mit, damit das Frontend nicht raten muss.
+      currency: 'USD'
     }
     quoteCache.set(sym, { value, ts: Date.now() })
     return value
@@ -134,6 +138,7 @@ export async function fetchQuotes(symbols) {
           open: null,
           previousClose: null,
           marketTime: null,
+          currency: 'USD',
           error: r.reason?.message || 'Kurs nicht verfügbar'
         }
   )

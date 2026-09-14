@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import Rail from './components/Rail.tsx'
 import TopBar from './components/TopBar.tsx'
 import PlaceholderSection from './components/PlaceholderSection.tsx'
 import OverviewSection from './modules/OverviewSection.tsx'
 import MarketsSection from './modules/MarketsSection.tsx'
 import WatchlistSection from './modules/WatchlistSection.tsx'
+import StundenplanSection from './modules/StundenplanSection.tsx'
 import SubstitutionsSection from './modules/SubstitutionsSection.tsx'
 import CalendarSection from './modules/CalendarSection.tsx'
 import MailSection from './modules/MailSection.tsx'
@@ -15,6 +16,9 @@ import { GlobeIcon, TrendingIcon } from './components/icons.tsx'
 import { NAV } from './nav.tsx'
 import { useTheme } from './lib/useTheme.ts'
 import { useStocks } from './lib/useStocks.ts'
+
+// pdf.js ist schwergewichtig (~300 KB gzip) – nur laden, wenn der Tab offen ist.
+const LoesungsbuchSection = lazy(() => import('./modules/LoesungsbuchSection.tsx'))
 
 export default function App() {
   const { theme, toggle } = useTheme()
@@ -39,6 +43,8 @@ export default function App() {
         )
       case 'watchlist':
         return <WatchlistSection />
+      case 'stundenplan':
+        return <StundenplanSection />
       case 'substitutions':
         return <SubstitutionsSection />
       case 'calendar':
@@ -51,6 +57,12 @@ export default function App() {
         return <NewsSection type="finance" title="Finanznews" icon={TrendingIcon} />
       case 'vault':
         return <VaultSection />
+      case 'loesungsbuch':
+        return (
+          <Suspense fallback={<div className="state">Lädt …</div>}>
+            <LoesungsbuchSection />
+          </Suspense>
+        )
       case 'todo':
         return <TodoSection />
       default:

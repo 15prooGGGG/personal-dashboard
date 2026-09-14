@@ -103,6 +103,14 @@ export const LogoMark = (p: P) => (
     <path d="M15 6h4v4" />
   </svg>
 )
+// Stundenplan: Raster aus Zeitblöcken.
+export const TimetableIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4.5" width="18" height="16" rx="2" />
+    <path d="M3 9.5h18M9 9.5v11M15 9.5v11" />
+  </svg>
+)
+
 // Second Brain: aufgeschlagenes Notizbuch.
 export const VaultIcon = (p: P) => (
   <svg {...base(p)}>
@@ -127,6 +135,14 @@ export const SchoolIcon = (p: P) => (
 export const StarIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="m12 3.5 2.6 5.4 5.9.85-4.25 4.15 1 5.9L12 17.05 6.75 19.8l1-5.9L3.5 9.75l5.9-.85Z" />
+  </svg>
+)
+// Lösungsbuch: aufgeschlagenes Buch mit Lesezeichen.
+export const BookIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 5.5a2 2 0 0 1 2-2h5v15H6a2 2 0 0 0-2 2Z" />
+    <path d="M20 5.5a2 2 0 0 0-2-2h-5v15h5a2 2 0 0 1 2 2Z" />
+    <path d="M9.5 7h2v6l-1-.75L9.5 13Z" />
   </svg>
 )
 export const ChartIcon = (p: P) => (

@@ -10,6 +10,8 @@
 // nur fetchQuotes()/fetchHistory() ersetzen – die API-Routen bleiben gleich.
 // ===========================================================================
 
+import { createSparkCache, SPARK_TTL } from './sparkline.js'
+
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
 
@@ -122,3 +124,16 @@ export async function fetchHistory(symbol, range = '1mo', interval = '1d') {
   historyCache.set(key, out)
   return out
 }
+
+// Sparkline-Punkte für die Watchlist -----------------------------------------
+// WARUM HIER UND NICHT BEI FINNHUB: /stock/candle liegt dort hinter dem
+// Bezahltarif (403 im Free-Tier). Yahoo kennt dieselben US-Ticker und ist
+// ohnehin schon angebunden.
+//
+// Ein Monat mit Tageswerten: kurz genug, dass die Linie in einer 84 px breiten
+// Sparkline noch Bewegung zeigt, lang genug, um mehr zu sagen als die
+// Tagesveränderung daneben.
+export const fetchSparkline = createSparkCache(SPARK_TTL, async (symbol) => {
+  const history = await fetchHistory(symbol, '1mo', '1d')
+  return history.points.map((p) => p.close)
+})

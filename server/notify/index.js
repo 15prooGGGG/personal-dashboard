@@ -8,6 +8,7 @@ import { isConfigured as schulportalReady } from '../integrations/schulportal.js
 import { daily, every, startScheduler, listJobs } from './scheduler.js'
 import { buildPlanMessage, buildPlanMessageIfRelevant } from './plan.js'
 import { checkForChanges, watchWindow } from './plan-watch.js'
+import { buildDigest } from './market.js'
 
 export { listJobs }
 
@@ -71,4 +72,9 @@ export function setupNotifications() {
 // kannst, ohne bis 6:45 zu warten.
 export async function sendTestPlan() {
   return sendSignal(await buildPlanMessage())
+}
+
+// Testversand des Morgen-Briefings (Kurse/Watchlist), analog zu sendTestPlan.
+export async function sendTestDigest() {
+  return sendSignal(await buildDigest())
 }

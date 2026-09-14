@@ -15,7 +15,8 @@ Express-Server liefert das Frontend **und** kapselt die Kursquelle
 | Bereich | Quelle | Status |
 | ------- | ------ | ------ |
 | **Aktienkurse** (Nordex, iShares Nasdaq 100, iShares MSCI World) | Yahoo Finance über `server/stocks.js` | **echt**, ~15 Min verzögert |
-| **Watchlist** (eigene Auswahl, durchsuchbar) | Finnhub über `server/integrations/finnhub.js` | **echt**, Echtzeit für US-Börsen |
+| **Watchlist** – Aktien/ETFs (eigene Auswahl, durchsuchbar) | Finnhub über `server/integrations/finnhub.js` | **echt**, Echtzeit für US-Börsen (USD) |
+| **Watchlist** – Krypto | CoinGecko über `server/integrations/coingecko.js`, kein Key nötig | **echt**, 24/7 (EUR) |
 | Kalender, Wichtige Mails | iCloud (CalDAV/IMAP) | **echt** |
 | News, Finanznews | RSS (Tagesschau, Handelsblatt) | **echt** |
 | To-Do | eigene Liste, `data/todos.json` | **echt** |
@@ -48,7 +49,8 @@ server/
   stocks.js               # Yahoo-Client (Session + Cache)
   watchlist-store.js      # Watchlist-Auswahl als JSON (Docker-Volume)
   integrations/
-    finnhub.js            # Finnhub-Client: Symbolsuche + Kurse (Cache)
+    finnhub.js            # Finnhub-Client: Aktien/ETF-Suche + Kurse (Cache)
+    coingecko.js          # CoinGecko-Client: Coin-Suche + Kurse (keylos)
     obsidian.js           # Vault-Parser: Aufgaben, Projekte, Frontmatter
 Dockerfile, docker-compose.yml
 ```

@@ -41,15 +41,18 @@ export async function addToWatchlist(hit: SymbolHit): Promise<WatchlistEntry> {
   const res = await fetch('/api/watchlist', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol: hit.symbol, name: hit.name, type: hit.type })
+    body: JSON.stringify(hit)
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data?.error || 'Konnte nicht hinzufügen')
   return data as WatchlistEntry
 }
 
-export async function removeFromWatchlist(symbol: string): Promise<void> {
-  const res = await fetch(`/api/watchlist/${encodeURIComponent(symbol)}`, { method: 'DELETE' })
+export async function removeFromWatchlist(entry: WatchlistEntry): Promise<void> {
+  const res = await fetch(
+    `/api/watchlist/${encodeURIComponent(entry.symbol)}?source=${entry.source}`,
+    { method: 'DELETE' }
+  )
   if (!res.ok) throw new Error('Konnte nicht entfernen')
 }
 
@@ -70,6 +73,7 @@ const TYPE_LABELS: Record<string, string> = {
   bond: 'Anleihe',
   crypto: 'Krypto',
   'digital currency': 'Krypto',
+  etn: 'ETN',
   warrant: 'Optionsschein',
   right: 'Bezugsrecht',
   unit: 'Unit'

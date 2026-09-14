@@ -2,38 +2,56 @@ import { useState } from 'react'
 import PageSection from '../components/PageSection.tsx'
 import NotConnected from '../components/NotConnected.tsx'
 import SymbolSearch from '../components/SymbolSearch.tsx'
+import Sparkline from '../components/Sparkline.tsx'
 import { StarIcon } from '../components/icons.tsx'
 import { typeLabel } from '../lib/finnhub.ts'
 import { useWatchlist } from '../lib/useWatchlist.ts'
 import { formatCurrency, formatPercent, deltaClass } from '../lib/format.ts'
 import type { WatchlistEntry } from '../types.ts'
 
-// Finnhub liefert zum Kurs keine Währung mit. Im Free-Tier gibt es Kurse nur
-// für US-Börsen, deshalb ist USD hier die richtige Annahme.
-const CURRENCY = 'USD'
+// Dasselbe Kürzel kann in beiden Quellen vorkommen – erst Quelle + Symbol
+// zusammen identifizieren einen Eintrag eindeutig.
+const key = (e: WatchlistEntry) => `${e.source}:${e.symbol}`
 
-function fmt(value: number | null | undefined) {
-  return value != null ? formatCurrency(value, CURRENCY) : '–'
+// Aktien notieren in USD, Krypto in EUR – die Währung kommt pro Kurs mit.
+function fmt(value: number | null | undefined, currency = 'USD') {
+  return value != null ? formatCurrency(value, currency) : '–'
 }
 
-// Aufgeklappte Detailzeile: die Tageswerte aus dem /quote-Endpunkt.
+// Aufgeklappte Detailzeile. Krypto handelt durchgehend, hat also keine
+// Eröffnung und rollierende 24-Stunden-Werte statt Tageswerten.
 function Details({ entry }: { entry: WatchlistEntry }) {
-  const fields = [
-    ['Eröffnung', entry.open],
-    ['Tageshoch', entry.high],
-    ['Tagestief', entry.low],
-    ['Vortag', entry.previousClose]
-  ] as const
+  const crypto = entry.source === 'coingecko'
+  const fields = crypto
+    ? ([
+        ['Hoch 24 h', entry.high],
+        ['Tief 24 h', entry.low],
+        ['vor 24 h', entry.previousClose]
+      ] as const)
+    : ([
+        ['Eröffnung', entry.open],
+        ['Tageshoch', entry.high],
+        ['Tagestief', entry.low],
+        ['Vortag', entry.previousClose]
+      ] as const)
 
   return (
-    <div className="wl__details">
-      {fields.map(([label, value]) => (
-        <div className="wl__detail" key={label}>
-          <span className="wl__detail-label">{label}</span>
-          <span className="wl__detail-value num">{fmt(value)}</span>
+    <>
+      {entry.spark && entry.spark.length > 1 && (
+        <div className="wl__chart">
+          <Sparkline points={entry.spark} range={entry.sparkRange} wide />
+          <span className="wl__chart-note">Verlauf · {entry.sparkRange}</span>
         </div>
-      ))}
-    </div>
+      )}
+      <div className="wl__details">
+        {fields.map(([label, value]) => (
+          <div className="wl__detail" key={label}>
+            <span className="wl__detail-label">{label}</span>
+            <span className="wl__detail-value num">{fmt(value, entry.currency)}</span>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -62,7 +80,10 @@ export default function WatchlistSection() {
   return (
     <PageSection title="Watchlist" icon={StarIcon} note={note}>
       <div className="card">
-        <SymbolSearch onAdd={add} isInList={(sym) => items.some((i) => i.symbol === sym)} />
+        <SymbolSearch
+          onAdd={add}
+          isInList={(hit) => items.some((i) => i.symbol === hit.symbol && i.source === hit.source)}
+        />
       </div>
 
       <div className="card wl__card">
@@ -77,30 +98,33 @@ export default function WatchlistSection() {
         ) : (
           <ul className="rows">
             {items.map((entry) => {
-              const open = expanded === entry.symbol
+              // Verglichen wird derselbe Schlüssel, der auch gesetzt wird –
+              // sonst bleibt die Detailzeile immer zu.
+              const open = expanded === key(entry)
               return (
-                <li key={entry.symbol}>
+                <li key={key(entry)}>
                   <div className="wl">
                     <button
                       className="wl__main"
-                      onClick={() => setExpanded(open ? null : entry.symbol)}
+                      onClick={() => setExpanded(open ? null : key(entry))}
                       aria-expanded={open}
                     >
-                      <span className="wl__sym num">{entry.symbol}</span>
+                      <span className="wl__sym num">{entry.display}</span>
                       <span className="wl__text">
                         <span className="row__title">{entry.name}</span>
                         <span className="row__meta">
                           {entry.error ? entry.error : typeLabel(entry.type)}
                         </span>
                       </span>
-                      <span className="wl__price num">{fmt(entry.price)}</span>
+                      <Sparkline points={entry.spark} range={entry.sparkRange} />
+                      <span className="wl__price num">{fmt(entry.price, entry.currency)}</span>
                       <span className={`wl__delta num ${deltaClass(entry.changePercent)}`}>
                         {entry.changePercent != null ? formatPercent(entry.changePercent) : ''}
                       </span>
                     </button>
                     <button
                       className="todo__del"
-                      onClick={() => remove(entry.symbol)}
+                      onClick={() => remove(entry)}
                       aria-label={`${entry.name} von der Watchlist entfernen`}
                     >
                       ×

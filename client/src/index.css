@@ -803,6 +803,98 @@ button {
 .todoform input::placeholder {
   color: var(--muted);
 }
+
+/* Lösungsbuch ---------------------------------------------------------------- */
+.loesungsbuch__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.loesungsbuch__form input {
+  flex: 0 1 90px;
+  min-width: 0;
+  padding: 11px 14px;
+  border-radius: var(--r-ctl);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+}
+.loesungsbuch__form .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.loesungsbuch__form input::placeholder {
+  color: var(--muted);
+}
+.loesungsbuch__modebtn {
+  margin-left: auto;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.btn--ghost:hover {
+  background: var(--surface-2);
+  opacity: 1;
+}
+@media (max-width: 480px) {
+  .loesungsbuch__modebtn {
+    margin-left: 0;
+  }
+}
+.loesungsbuch__frame {
+  border-radius: var(--r-ctl);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.pdfviewer {
+  display: flex;
+  flex-direction: column;
+}
+.pdfviewer__canvas {
+  height: 70vh;
+  overflow-y: auto;
+  background: var(--surface-2);
+  display: flex;
+  justify-content: center;
+}
+.pdfviewer__canvas canvas {
+  display: block;
+}
+.pdfviewer__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.pdfviewer__navbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-ctl);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.pdfviewer__navbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pdfviewer__pagenum {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 8em;
+  text-align: center;
+}
 .btn {
   padding: 11px 18px;
   border-radius: var(--r-ctl);
@@ -1030,6 +1122,41 @@ button {
   font-size: 0.82rem;
   font-weight: 600;
 }
+/* Sparkline. Die Breiten passen zum viewBox-Verhältnis der Komponente
+   (100:32) – bei stark abweichenden Maßen kippt die Schraffur aus den 45°. */
+.spark {
+  flex-shrink: 0;
+  width: 84px;
+  height: 27px;
+  color: var(--muted);
+}
+.spark.up {
+  color: var(--up);
+}
+.spark.down {
+  color: var(--down);
+}
+.spark--empty {
+  opacity: 0.5;
+}
+.spark--wide {
+  width: 100%;
+  height: 110px;
+}
+
+.wl__chart {
+  margin: 2px 0 10px;
+  padding: 12px 14px 8px;
+  border-radius: var(--r-ctl);
+  background: var(--surface-2);
+}
+.wl__chart-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .wl__details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -1058,6 +1185,18 @@ button {
   .wl__sym,
   .search__sym {
     min-width: 54px;
+  }
+  .wl__main .spark {
+    width: 56px;
+    height: 18px;
+  }
+}
+
+/* Auf sehr schmalen Displays sind Kurs und Veränderung wichtiger als die
+   Linie – die gibt es dort aufgeklappt in groß. */
+@media (max-width: 420px) {
+  .wl__main .spark {
+    display: none;
   }
 }
 
@@ -1368,4 +1507,99 @@ code {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Stundenplan --------------------------------------------------------------- */
+.tt-row.is-muted .row__title {
+  color: var(--muted);
+  font-weight: 400;
+}
+.tt-row.is-now {
+  background: var(--accent-wash);
+  border-radius: 10px;
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-left: -8px;
+  margin-right: -8px;
+}
+.tt-time {
+  flex-shrink: 0;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.tt-time__num {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.tt-time__clock {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tt-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+.tt {
+  width: 100%;
+  min-width: 460px;
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-size: 0.78rem;
+}
+.tt th,
+.tt td {
+  padding: 7px 8px;
+  border-radius: 9px;
+  text-align: left;
+  vertical-align: top;
+}
+.tt thead th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 2px;
+}
+.tt thead th.is-today {
+  color: var(--accent-deep);
+}
+.tt__corner {
+  width: 46px;
+}
+.tt__period {
+  display: flex;
+  flex-direction: column;
+  color: var(--muted);
+}
+.tt__lesson {
+  background: var(--surface-2);
+}
+.tt__lesson.is-now {
+  background: var(--accent-wash);
+  box-shadow: inset 0 0 0 1px var(--accent-deep);
+}
+.tt__subject {
+  display: block;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.tt__room {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.tt__break,
+.tt__free {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
 }

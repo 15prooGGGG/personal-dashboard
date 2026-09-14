@@ -11,7 +11,7 @@ export default function SymbolSearch({
   isInList
 }: {
   onAdd: (hit: SymbolHit) => void
-  isInList: (symbol: string) => boolean
+  isInList: (hit: SymbolHit) => boolean
 }) {
   const [query, setQuery] = useState('')
   const { results, searching, error, notConfigured } = useSymbolSearch(query)
@@ -52,9 +52,9 @@ export default function SymbolSearch({
       ) : (
         <ul className="rows search__results">
           {results.map((hit) => {
-            const added = isInList(hit.symbol)
+            const added = isInList(hit)
             return (
-              <li className="row" key={hit.symbol}>
+              <li className="row" key={`${hit.source}:${hit.symbol}`}>
                 <span className="search__sym num">{hit.display}</span>
                 <div className="row__main">
                   <div className="row__title">{hit.name}</div>

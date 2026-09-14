@@ -55,7 +55,7 @@ export function useWatchlist() {
       try {
         const entry = await addToWatchlist(hit)
         setState((s) =>
-          s.items.some((i) => i.symbol === entry.symbol)
+          s.items.some((i) => i.symbol === entry.symbol && i.source === entry.source)
             ? s
             : { ...s, items: [...s.items, entry], error: null }
         )
@@ -70,10 +70,13 @@ export function useWatchlist() {
   // Optimistisch entfernen; schlägt der Aufruf fehl, holt ein Reload den
   // echten Stand zurück.
   const remove = useCallback(
-    async (symbol: string) => {
-      setState((s) => ({ ...s, items: s.items.filter((i) => i.symbol !== symbol) }))
+    async (entry: WatchlistEntry) => {
+      setState((s) => ({
+        ...s,
+        items: s.items.filter((i) => !(i.symbol === entry.symbol && i.source === entry.source))
+      }))
       try {
-        await removeFromWatchlist(symbol)
+        await removeFromWatchlist(entry)
       } catch {
         setState((s) => ({ ...s, error: 'Konnte nicht entfernen.' }))
         load()

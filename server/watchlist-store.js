@@ -36,18 +36,36 @@ function save(list) {
   fs.writeFileSync(FILE, JSON.stringify(list, null, 2))
 }
 
+// Aktien-Tickers sind großgeschrieben (AAPL), CoinGecko-IDs kleingeschrieben
+// (bitcoin). Deshalb wird nur bei Finnhub normalisiert.
+function normalize(symbol, source) {
+  const sym = String(symbol || '').trim()
+  return source === 'coingecko' ? sym.toLowerCase() : sym.toUpperCase()
+}
+
+// Einträge aus der Zeit vor der Krypto-Anbindung haben weder source noch
+// display – die stammen alle von Finnhub.
+function migrate(entry) {
+  return {
+    source: 'finnhub',
+    display: entry.symbol,
+    ...entry
+  }
+}
+
 export function getWatchlist() {
-  return load()
+  return load().map(migrate)
 }
 
 // Fügt ein Symbol hinzu. Bereits vorhandene Symbole bleiben unverändert –
 // doppelte Einträge würden nur doppelte Kursabrufe kosten.
-export function addSymbol({ symbol, name, type }) {
-  const sym = String(symbol || '').trim().toUpperCase()
+export function addSymbol({ symbol, name, type, source, display }) {
+  const src = source === 'coingecko' ? 'coingecko' : 'finnhub'
+  const sym = normalize(symbol, src)
   if (!sym) return { error: 'Symbol fehlt' }
 
-  const list = load()
-  const existing = list.find((e) => e.symbol === sym)
+  const list = getWatchlist()
+  const existing = list.find((e) => e.symbol === sym && e.source === src)
   if (existing) return { entry: existing, added: false }
   if (list.length >= MAX_ENTRIES) {
     return { error: `Watchlist ist voll (max. ${MAX_ENTRIES} Werte)` }
@@ -55,6 +73,8 @@ export function addSymbol({ symbol, name, type }) {
 
   const entry = {
     symbol: sym,
+    source: src,
+    display: String(display || symbol).trim().slice(0, 20),
     name: String(name || sym).trim().slice(0, 120),
     type: String(type || '').trim().slice(0, 40),
     addedAt: new Date().toISOString()
@@ -64,10 +84,14 @@ export function addSymbol({ symbol, name, type }) {
   return { entry, added: true }
 }
 
-export function removeSymbol(symbol) {
-  const sym = String(symbol || '').trim().toUpperCase()
-  const list = load()
-  const next = list.filter((e) => e.symbol !== sym)
+// Ohne source wird in beiden Quellen gesucht – der Aufruf aus dem Frontend
+// kennt die Quelle zwar, aber so bleibt die Route auch ohne sie benutzbar.
+export function removeSymbol(symbol, source) {
+  const list = getWatchlist()
+  const raw = String(symbol || '').trim().toLowerCase()
+  const next = list.filter(
+    (e) => !(e.symbol.toLowerCase() === raw && (!source || e.source === source))
+  )
   if (next.length !== list.length) save(next)
   return next
 }

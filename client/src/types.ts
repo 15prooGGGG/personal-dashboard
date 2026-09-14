@@ -43,21 +43,27 @@ export interface SymbolHit {
   display: string
   name: string
   type: string
+  source: 'finnhub' | 'coingecko'
 }
 
 export interface WatchlistEntry {
   symbol: string
+  display: string
   name: string
   type: string
+  source: 'finnhub' | 'coingecko'
   addedAt: string
   price?: number | null
   change?: number | null
   changePercent?: number | null
+  currency?: string
   high?: number | null
   low?: number | null
   open?: number | null
   previousClose?: number | null
   marketTime?: number | null
+  spark?: number[] | null
+  sparkRange?: string | null
   error?: string
 }
 

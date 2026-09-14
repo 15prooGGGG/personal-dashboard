@@ -2,13 +2,15 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { fetchQuotes, fetchHistory, WATCHLIST } from './stocks.js'
+import { fetchQuotes, fetchHistory, fetchSparkline, WATCHLIST } from './stocks.js'
 import { isConfigured } from './config.js'
 import { fetchNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
 import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
 import { getVault } from './integrations/obsidian.js'
+import { getStundenplan } from './stundenplan.js'
+import { PDF_PATH, isConfigured as loesungsbuchReady, search as searchLoesungsbuch } from './loesungsbuch.js'
 // fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
 // bleibt, welche Quelle gemeint ist (stocks.js = Yahoo, finnhub.js = Watchlist).
 import {
@@ -16,6 +18,7 @@ import {
   fetchQuotes as fetchFinnhubQuotes,
   isConfigured as finnhubReady
 } from './integrations/finnhub.js'
+import { searchCoins, fetchCoinQuotes, fetchCoinSparkline } from './integrations/coingecko.js'
 import { getWatchlist, addSymbol, removeSymbol } from './watchlist-store.js'
 import { checkSignal, fetchLinkQr } from './integrations/signal.js'
 import {
@@ -25,7 +28,8 @@ import {
   getStatus as schulportalStatus,
   isConfigured as schulportalReady
 } from './integrations/schulportal.js'
-import { setupNotifications, sendTestPlan, listJobs } from './notify/index.js'
+import { setupNotifications, sendTestDigest, sendTestPlan, listJobs } from './notify/index.js'
+import { buildDigest } from './notify/market.js'
 import { buildPlanMessage } from './notify/plan.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -62,6 +66,16 @@ app.get('/api/news', async (req, res) => {
   }
 })
 
+// Stundenplan (aus den Vault-PDFs vorgebaut, siehe scripts/build-stundenplan.js).
+app.get('/api/stundenplan', (req, res) => {
+  try {
+    res.json(getStundenplan())
+  } catch (err) {
+    console.error('stundenplan error:', err.message)
+    res.status(500).json({ configured: false, reason: 'error' })
+  }
+})
+
 // Obsidian-Vault (nur lesend, per Syncthing gespiegelt).
 app.get('/api/vault', (req, res) => {
   try {
@@ -70,6 +84,29 @@ app.get('/api/vault', (req, res) => {
     console.error('vault error:', err.message)
     res.status(500).json({ configured: false, reason: 'error' })
   }
+})
+
+// --- Mathe-Lösungsbuch (PDF + OCR-Index Seite/Aufgabe → PDF-Seite) ---------
+app.get('/api/loesungsbuch', (req, res) => {
+  res.json({ configured: loesungsbuchReady() })
+})
+
+app.get('/api/loesungsbuch/pdf', (req, res) => {
+  if (!loesungsbuchReady()) return res.status(404).end()
+  res.sendFile(PDF_PATH)
+})
+
+// ?seite=39&nr=3
+app.get('/api/loesungsbuch/search', (req, res) => {
+  if (!loesungsbuchReady()) return res.json({ configured: false })
+  const seite = parseInt(req.query.seite, 10)
+  const nr = parseInt(req.query.nr, 10)
+  if (!Number.isInteger(seite) || !Number.isInteger(nr)) {
+    return res.status(400).json({ configured: true, error: 'Seite und Nr. angeben' })
+  }
+  const hit = searchLoesungsbuch(seite, nr)
+  if (!hit) return res.json({ configured: true, found: false })
+  res.json({ configured: true, found: true, ...hit })
 })
 
 // Kalender / Mail liefern selbst einen { configured, ... }-Status.
@@ -126,36 +163,119 @@ app.get('/api/stocks/history', async (req, res) => {
   }
 })
 
-// --- Watchlist (Finnhub) ----------------------------------------------------
-// Symbolsuche für das Suchfeld. ?q=apple
-app.get('/api/finnhub/search', async (req, res) => {
-  if (!finnhubReady()) return res.json({ configured: false, results: [] })
-  try {
-    const data = await searchSymbols(req.query.q)
-    res.json({ configured: true, ...data })
-  } catch (err) {
-    console.error('finnhub search error:', err.message)
-    res.status(502).json({ configured: true, error: err.message, results: [] })
+// --- Watchlist (Aktien via Finnhub, Krypto via CoinGecko) -------------------
+// Beide Quellen liefern getrennte Listen. Würde man sie einfach aneinander-
+// hängen, läge bei "bitcoin" der eigentliche Coin hinter einem Dutzend
+// Bitcoin-nahen Aktien. Deshalb quellenübergreifend nach Treffergüte sortieren:
+// exaktes Kürzel vor exaktem Namen vor Präfix-Treffern vor dem Rest.
+function rankHits(hits, query) {
+  const q = String(query || '').trim().toLowerCase()
+
+  const score = (hit) => {
+    const sym = (hit.display || hit.symbol).toLowerCase()
+    const name = (hit.name || '').toLowerCase()
+    if (sym === q) return 0
+    if (name === q) return 1
+    if (sym.startsWith(q)) return 2
+    if (name.startsWith(q)) return 3
+    return 4
   }
+
+  return hits
+    .map((hit, i) => ({ hit, rank: score(hit), i }))
+    // i als Tiebreaker: innerhalb gleicher Güte bleibt die Reihenfolge der
+    // Quelle erhalten (die ist schon nach Relevanz bzw. Marktkapitalisierung).
+    .sort((a, b) => a.rank - b.rank || a.i - b.i)
+    .slice(0, 14)
+    .map((x) => x.hit)
+}
+
+
+// Symbolsuche für das Suchfeld: fragt beide Quellen parallel ab. ?q=bitcoin
+// Fällt eine Quelle aus, liefert die andere trotzdem Treffer.
+app.get('/api/finnhub/search', async (req, res) => {
+  const q = req.query.q
+  const [stocks, coins] = await Promise.allSettled([
+    finnhubReady() ? searchSymbols(q) : Promise.resolve({ results: [] }),
+    searchCoins(q)
+  ])
+
+  if (stocks.status === 'rejected') console.error('finnhub search error:', stocks.reason?.message)
+  if (coins.status === 'rejected') console.error('coingecko search error:', coins.reason?.message)
+
+  const results = rankHits(
+    [
+      ...(stocks.status === 'fulfilled' ? stocks.value.results : []),
+      ...(coins.status === 'fulfilled' ? coins.value : [])
+    ],
+    q
+  )
+
+  // Nur wenn beide Quellen versagen, ist es ein echter Fehler.
+  if (results.length === 0 && stocks.status === 'rejected' && coins.status === 'rejected') {
+    return res
+      .status(502)
+      .json({ configured: true, error: stocks.reason?.message || 'Suche fehlgeschlagen', results: [] })
+  }
+
+  res.json({ configured: finnhubReady(), query: String(q || '').trim(), results })
 })
 
-// Gespeicherte Watchlist samt aktuellen Kursen.
+// Gespeicherte Watchlist samt aktuellen Kursen (aus beiden Quellen).
 app.get('/api/watchlist', async (req, res) => {
   const entries = getWatchlist()
-  if (!finnhubReady()) return res.json({ configured: false, items: [] })
+  // Krypto braucht keinen Key – die Watchlist ist also auch ohne Finnhub nutzbar.
+  if (!finnhubReady() && entries.length === 0) {
+    return res.json({ configured: false, items: [] })
+  }
   if (entries.length === 0) return res.json({ configured: true, items: [] })
 
-  try {
-    const quotes = await fetchFinnhubQuotes(entries.map((e) => e.symbol))
-    const bySymbol = new Map(quotes.map((q) => [q.symbol, q]))
-    res.json({
-      configured: true,
-      items: entries.map((e) => ({ ...e, ...(bySymbol.get(e.symbol) || {}) }))
+  const stockSymbols = entries.filter((e) => e.source === 'finnhub').map((e) => e.symbol)
+  const coinIds = entries.filter((e) => e.source === 'coingecko').map((e) => e.symbol)
+
+  const [stocks, coins, sparks] = await Promise.allSettled([
+    stockSymbols.length && finnhubReady() ? fetchFinnhubQuotes(stockSymbols) : Promise.resolve([]),
+    coinIds.length ? fetchCoinQuotes(coinIds) : Promise.resolve([]),
+    // Kursverläufe für die Sparklines. Beide Caches liefern vorhandene Punkte
+    // sofort und erneuern veraltete im Hintergrund – der 30-s-Poll wartet also
+    // nur beim allerersten Mal auf die Quelle.
+    Promise.all([
+      ...stockSymbols.map(async (s) => [s, await fetchSparkline(s)]),
+      ...coinIds.map(async (id) => [id, await fetchCoinSparkline(id)])
+    ])
+  ])
+
+  if (coins.status === 'rejected') console.error('coingecko quotes error:', coins.reason?.message)
+
+  const quotes = [
+    ...(stocks.status === 'fulfilled' ? stocks.value : []),
+    ...(coins.status === 'fulfilled' ? coins.value : [])
+  ]
+  const bySymbol = new Map(quotes.map((q) => [q.symbol, q]))
+  const sparkBySymbol = new Map(sparks.status === 'fulfilled' ? sparks.value : [])
+
+  res.json({
+    configured: true,
+    items: entries.map((e) => {
+      const quote = bySymbol.get(e.symbol)
+      if (quote) {
+        const spark = sparkBySymbol.get(e.symbol) || null
+        // Die Zeitspanne unterscheidet sich je Quelle (Yahoo liefert Tages-,
+        // CoinGecko Stundenwerte) – ohne Beschriftung wäre im Frontend nicht
+        // klar, worüber die Linie läuft.
+        const sparkRange = e.source === 'coingecko' ? '7 Tage' : '1 Monat'
+        return { ...e, ...quote, spark, sparkRange: spark ? sparkRange : null }
+      }
+      // Kein Kurs: die Quelle ist gerade ausgefallen oder nicht eingerichtet.
+      const reason =
+        e.source === 'finnhub' && !finnhubReady()
+          ? 'Finnhub-Key fehlt'
+          : e.source === 'coingecko' && coins.status === 'rejected'
+            ? coins.reason?.message
+            : 'Kurs nicht verfügbar'
+      return { ...e, price: null, changePercent: null, error: reason }
     })
-  } catch (err) {
-    console.error('watchlist error:', err.message)
-    res.status(502).json({ configured: true, error: err.message, items: [] })
-  }
+  })
 })
 
 app.post('/api/watchlist', (req, res) => {
@@ -165,7 +285,7 @@ app.post('/api/watchlist', (req, res) => {
 })
 
 app.delete('/api/watchlist/:symbol', (req, res) => {
-  removeSymbol(req.params.symbol)
+  removeSymbol(req.params.symbol, req.query.source)
   res.status(204).end()
 })
 
@@ -209,6 +329,16 @@ app.get('/api/substitutions/schools', async (req, res) => {
 // Status: erreichbar? Gerät gekoppelt? Welche Jobs laufen wann?
 app.get('/api/notify', async (req, res) => {
   res.json({ ...(await checkSignal()), jobs: listJobs() })
+})
+
+// Vorschau des Briefings im Browser – verschickt nichts.
+app.get('/api/notify/preview', async (req, res) => {
+  try {
+    res.type('text/plain').send(await buildDigest())
+  } catch (err) {
+    console.error('digest preview error:', err.message)
+    res.status(500).type('text/plain').send('Briefing konnte nicht gebaut werden: ' + err.message)
+  }
 })
 
 // Kopplungs-QR als Bild. Jeder Aufruf startet einen neuen Kopplungsversuch,
@@ -272,10 +402,10 @@ app.get('/api/notify/plan/preview', async (req, res) => {
   }
 })
 
-// Testnachricht für den Vertretungsplan wirklich verschicken.
+// Testnachrichten wirklich verschicken. ?type=plan für den Vertretungsplan.
 app.post('/api/notify/test', async (req, res) => {
   try {
-    await sendTestPlan()
+    await (req.query.type === 'plan' ? sendTestPlan() : sendTestDigest())
     res.json({ sent: true })
   } catch (err) {
     console.error('signal test error:', err.message)
