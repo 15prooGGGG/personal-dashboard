@@ -13,13 +13,17 @@ export default function NewsSection({
   title: string
   icon: IconComponent
 }) {
-  const { data, loading, error } = useApi<{ items: NewsItem[] }>(
+  const { data, loading, error } = useApi<{ items: NewsItem[]; sources?: string[] }>(
     `/api/news?type=${type}`,
     15 * 60 * 1000
   )
 
   return (
-    <PageSection title={title} icon={icon} note="RSS · stündlich aktualisiert">
+    <PageSection
+      title={title}
+      icon={icon}
+      note={data?.sources ? `${data.sources.length} Quellen · RSS` : 'RSS'}
+    >
       <div className="card">
         {loading ? (
           <div className="state">Lädt …</div>

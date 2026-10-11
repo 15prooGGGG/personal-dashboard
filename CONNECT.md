@@ -48,8 +48,9 @@ ganze Posteingang.
 
 ## 3) News & Finanznews (RSS)
 
-Läuft ohne Zugangsdaten mit Standard-Feeds (Tagesschau, Handelsblatt). Eigene
-Quellen optional:
+Läuft ohne Zugangsdaten mit 15 Nachrichten- und 9 Finanzquellen (Liste in
+`server/config.js`). Die Meldungen werden reihum gemischt, damit keine Quelle
+dominiert. Eigene Quellen optional – sie **ersetzen** die Standardliste:
 
 ```
 NEWS_FEEDS=https://feed-a.xml,https://feed-b.xml

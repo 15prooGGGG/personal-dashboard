@@ -21,6 +21,14 @@ const list = (key, fallback) => {
     .filter(Boolean)
   return arr.length ? arr : fallback
 }
+// Feed-Liste als [{ name, url }]. Aus der .env kommen nur URLs – der Name
+// fällt dann auf den Feed-Titel zurück.
+const feeds = (key, fallback) => {
+  const custom = list(key, [])
+  return custom.length
+    ? custom.map((url) => ({ name: null, url }))
+    : fallback.map(([name, url]) => ({ name, url }))
+}
 
 export const config = {
   calendar: {
@@ -76,11 +84,37 @@ export const config = {
     // Standard: alle Tage. Der Montagsplan steht oft schon Sonntagabend.
     planWatchDays: env('NOTIFY_PLAN_WATCH_DAYS') || '0,1,2,3,4,5,6'
   },
+  // Viele unabhängige Redaktionen statt einer: Die Liste wird serverseitig
+  // gemischt (Round-Robin), damit kein einzelner Feed alles überdeckt.
+  // Eigene Liste per NEWS_FEEDS / FINANCE_FEEDS (kommagetrennte URLs).
   news: {
-    world: list('NEWS_FEEDS', ['https://www.tagesschau.de/index~rss2.xml']),
-    finance: list('FINANCE_FEEDS', [
-      'https://www.handelsblatt.com/contentexport/feed/finanzen',
-      'https://www.tagesschau.de/wirtschaft/index~rss2.xml'
+    world: feeds('NEWS_FEEDS', [
+      ['tagesschau', 'https://www.tagesschau.de/index~rss2.xml'],
+      ['ZDFheute', 'https://www.zdfheute.de/rss/zdf/nachrichten'],
+      ['Deutschlandfunk', 'https://www.deutschlandfunk.de/nachrichten-100.rss'],
+      ['SPIEGEL', 'https://www.spiegel.de/schlagzeilen/index.rss'],
+      ['ZEIT', 'https://newsfeed.zeit.de/index'],
+      ['FAZ', 'https://www.faz.net/rss/aktuell/'],
+      ['SZ', 'https://rss.sueddeutsche.de/rss/Topthemen'],
+      ['WELT', 'https://www.welt.de/feeds/latest.rss'],
+      ['n-tv', 'https://www.n-tv.de/rss'],
+      ['DW', 'https://rss.dw.com/rdf/rss-de-all'],
+      ['Tagesspiegel', 'https://www.tagesspiegel.de/contentexport/feed/home'],
+      ['hessenschau', 'https://www.hessenschau.de/index.rss'],
+      ['heise', 'https://www.heise.de/rss/heise-top-atom.xml'],
+      ['BBC', 'https://feeds.bbci.co.uk/news/world/rss.xml'],
+      ['Guardian', 'https://www.theguardian.com/world/rss']
+    ]),
+    finance: feeds('FINANCE_FEEDS', [
+      ['Handelsblatt', 'https://feeds.cms.handelsblatt.com/finanzen'],
+      ['WirtschaftsWoche', 'https://feeds.cms.wiwo.de/rss/schlagzeilen'],
+      ['manager magazin', 'https://www.manager-magazin.de/news/index.rss'],
+      ['FAZ Finanzen', 'https://www.faz.net/rss/aktuell/finanzen/'],
+      ['SPIEGEL Wirtschaft', 'https://www.spiegel.de/wirtschaft/index.rss'],
+      ['n-tv Wirtschaft', 'https://www.n-tv.de/wirtschaft/rss'],
+      ['tagesschau Wirtschaft', 'https://www.tagesschau.de/wirtschaft/index~rss2.xml'],
+      ['MarketWatch', 'https://feeds.content.dowjones.io/public/rss/mw_topstories'],
+      ['CNBC', 'https://www.cnbc.com/id/100003114/device/rss/rss.html']
     ])
   }
 }
