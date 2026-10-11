@@ -607,6 +607,281 @@ button {
   color: var(--muted);
 }
 
+/* WHOOP (Überblick) --------------------------------------------------------- */
+.whoop__rings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.whoop__ring {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.whoop__ring svg {
+  width: 100%;
+  max-width: 84px;
+  transform: rotate(-90deg);
+}
+.whoop__track,
+.whoop__arc {
+  fill: none;
+  stroke-width: 6;
+}
+.whoop__track {
+  stroke: var(--surface-2);
+}
+.whoop__arc {
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease;
+}
+/* Zahl mittig im Ring: Ring ist quadratisch, Label sitzt darunter. */
+.whoop__value {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 84px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.whoop__label {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.whoop__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.whoop__facts dt {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.whoop__facts dd {
+  margin: 2px 0 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* WHOOP-Kopplung */
+.whoop__connect {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.whoop__step {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.whoop__btn {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--r-ctl);
+  background: var(--ink);
+  color: var(--on-ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.whoop__btn:disabled,
+.whoop__btn.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.whoop__input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--surface);
+  color: var(--ink);
+  /* 16px verhindert das automatische Hineinzoomen auf iOS. */
+  font: inherit;
+  font-size: 16px;
+  min-width: 0;
+}
+.whoop__msg {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--down);
+}
+
+/* Schlaf-Tab ---------------------------------------------------------------- */
+.sl-focus {
+  background: var(--ink);
+  color: var(--on-ink);
+  border-color: transparent;
+}
+.sl-focus__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.sl-focus__text {
+  margin: 6px 0 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.sl-tiles {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 0;
+}
+.sl-stages {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.sl-stages__seg {
+  flex-basis: 0;
+  min-width: 3px;
+}
+.sl-stages__seg.is-deep,
+.sl-legend__dot.is-deep { background: var(--accent-deep); }
+.sl-stages__seg.is-rem,
+.sl-legend__dot.is-rem { background: var(--accent); }
+.sl-stages__seg.is-light,
+.sl-legend__dot.is-light { background: color-mix(in srgb, var(--accent) 35%, var(--surface)); }
+.sl-stages__seg.is-awake,
+.sl-legend__dot.is-awake { background: var(--amber); }
+.sl-legend {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.sl-legend li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sl-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-bottom: 3px;
+}
+.sl-legend__label,
+.sl-facts dt {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.sl-legend__value,
+.sl-facts dd {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sl-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 8px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.sl-facts dd {
+  margin: 2px 0 0;
+}
+.sl-workouts {
+  margin-top: 14px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.sl-hint,
+.sl-disclaimer {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.sl-recs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+}
+.sl-rec {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sl-rec__kind {
+  flex-shrink: 0;
+  width: 66px;
+  padding: 3px 0;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+.sl-rec__kind.is-training,
+.sl-rec__kind.is-sleep {
+  background: var(--accent-wash);
+  color: var(--accent-deep);
+}
+.sl-rec__kind.is-body {
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  color: color-mix(in srgb, var(--amber) 70%, var(--ink));
+}
+.sl-rec__main {
+  flex: 1;
+  min-width: 0;
+}
+.sl-rec__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.sl-rec__detail {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.sl-rec__basis {
+  margin: 5px 0 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
 /* Zeilenlisten -------------------------------------------------------------- */
 .rows {
   list-style: none;
@@ -1579,6 +1854,21 @@ code {
 @media (max-width: 560px) {
   .bento {
     grid-template-columns: minmax(0, 1fr);
+  }
+  /* Schlaf-Tab: vier Kacheln als 2×2, Empfehlungen einspaltig. */
+  .sl-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sl-recs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sl-rec {
+    flex-direction: column;
+    gap: 7px;
+  }
+  .sl-rec__kind {
+    width: auto;
+    padding: 3px 10px;
   }
   .bento__wide,
   .bento__full {

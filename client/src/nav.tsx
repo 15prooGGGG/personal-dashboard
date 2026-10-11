@@ -5,7 +5,7 @@
 // echter Inhalt gebaut wird (siehe App.tsx / PlaceholderSection).
 // ===========================================================================
 import type { IconComponent } from './types.ts'
-import { HomeIcon, ChartIcon, StarIcon, CalendarIcon, MailIcon, GlobeIcon, TrendingIcon, TodoIcon, VaultIcon, SchoolIcon, BookIcon, TimetableIcon } from './components/icons.tsx'
+import { HomeIcon, ChartIcon, StarIcon, CalendarIcon, MailIcon, GlobeIcon, TrendingIcon, TodoIcon, VaultIcon, SchoolIcon, BookIcon, TimetableIcon, MoonIcon } from './components/icons.tsx'
 
 export interface NavItem {
   id: string
@@ -15,6 +15,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { id: 'home', label: 'Übersicht', icon: HomeIcon },
+  { id: 'sleep', label: 'Schlaf', icon: MoonIcon },
   { id: 'stocks', label: 'Aktien', icon: ChartIcon },
   { id: 'watchlist', label: 'Watchlist', icon: StarIcon },
   { id: 'stundenplan', label: 'Stundenplan', icon: TimetableIcon },

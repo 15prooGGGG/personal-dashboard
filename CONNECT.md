@@ -227,6 +227,38 @@ dazu liegen in `server/schulportal.test.js` (`npm test -w server`).
 
 ---
 
+## 7) WHOOP (Recovery, Strain, Schlaf auf der Startseite)
+
+Offizielle WHOOP-API, kostenlos, einmalige Kopplung.
+
+1. Auf <https://developer-dashboard.whoop.com> mit dem WHOOP-Konto anmelden,
+   ein Team anlegen und eine App erstellen.
+2. Scopes anhaken: `read:recovery`, `read:cycles`, `read:sleep`, `read:profile`, `offline`.
+3. Als Redirect-URI exakt eintragen: `https://localhost/whoop-callback`
+4. Client-ID und Client-Secret in die `.env`:
+
+```
+WHOOP_CLIENT_ID=...
+WHOOP_CLIENT_SECRET=...
+```
+
+5. `docker compose up -d --build`, dann auf der Startseite in der WHOOP-Karte
+   „Mit WHOOP verbinden“ tippen, zustimmen, die Adresse der Fehlerseite in das
+   Feld einfügen und „Koppeln“ wählen. Alternativ per Terminal:
+
+```
+cd ~/claude-code/personal-dashboard
+node scripts/whoop-connect.js
+```
+
+   Den angezeigten Link öffnen (geht auch am Handy), bei WHOOP zustimmen. Der
+   Browser landet danach auf einer **Fehlerseite unter `localhost`. Das ist so gewollt.**
+   Die komplette Adresse aus der Browserzeile kopieren und im Skript einfügen.
+6. Die Werte erscheinen danach auf der Startseite.
+
+Die Tokens liegen in `data/whoop-tokens.json` (nicht in Git) und werden
+automatisch erneuert. Neu koppeln ist nur nötig, wenn du den Zugriff bei WHOOP widerrufst.
+
 ## Sicherheitshinweise
 
 - Die `.env` **niemals** committen oder weitergeben (sie ist in `.gitignore`).

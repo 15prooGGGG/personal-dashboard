@@ -1,4 +1,5 @@
 import PriceChart from '../components/PriceChart.tsx'
+import WhoopCard from '../components/WhoopCard.tsx'
 import { ChevronRightIcon } from '../components/icons.tsx'
 import { useApi } from '../lib/useApi.ts'
 import { formatCurrency, formatPercent, deltaClass } from '../lib/format.ts'
@@ -74,6 +75,9 @@ export default function OverviewSection({ quotes, onOpen }: OverviewProps) {
             <div className="stat__label">wichtige Mails</div>
           </div>
         </article>
+
+        {/* Körper: Recovery, Strain, Schlaf */}
+        <WhoopCard />
 
         {/* Was als Nächstes ansteht */}
         <article className="card">

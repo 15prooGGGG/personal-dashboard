@@ -12,6 +12,7 @@ import MailSection from './modules/MailSection.tsx'
 import TodoSection from './modules/TodoSection.tsx'
 import VaultSection from './modules/VaultSection.tsx'
 import NewsSection from './modules/NewsSection.tsx'
+import SleepSection from './modules/SleepSection.tsx'
 import { GlobeIcon, TrendingIcon } from './components/icons.tsx'
 import { NAV } from './nav.tsx'
 import { useTheme } from './lib/useTheme.ts'
@@ -32,6 +33,8 @@ export default function App() {
     switch (active) {
       case 'home':
         return <OverviewSection quotes={stocks.quotes} onOpen={setActive} />
+      case 'sleep':
+        return <SleepSection />
       case 'stocks':
         return (
           <MarketsSection

@@ -84,6 +84,15 @@ export const config = {
     // Standard: alle Tage. Der Montagsplan steht oft schon Sonntagabend.
     planWatchDays: env('NOTIFY_PLAN_WATCH_DAYS') || '0,1,2,3,4,5,6'
   },
+  // WHOOP-Entwickler-App (developer-dashboard.whoop.com). Die Redirect-URI muss
+  // exakt so in der App eingetragen sein. WHOOP verlangt https – das Dashboard
+  // hört dort nicht zu; man kopiert nach dem Login einfach die Adresse aus der
+  // Browserzeile ins Kopplungs-Skript.
+  whoop: {
+    clientId: env('WHOOP_CLIENT_ID'),
+    clientSecret: env('WHOOP_CLIENT_SECRET'),
+    redirectUri: env('WHOOP_REDIRECT_URI') || 'https://localhost/whoop-callback'
+  },
   // Viele unabhängige Redaktionen statt einer: Die Liste wird serverseitig
   // gemischt (Round-Robin), damit kein einzelner Feed alles überdeckt.
   // Eigene Liste per NEWS_FEEDS / FINANCE_FEEDS (kommagetrennte URLs).

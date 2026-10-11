@@ -9,6 +9,8 @@ import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
 import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
 import { getVault } from './integrations/obsidian.js'
+import { fetchWhoop, fetchWhoopHistory, authLink, completeLink, isConfigured as whoopReady } from './integrations/whoop.js'
+import { buildCoaching } from './whoop-coach.js'
 import { getStundenplan } from './stundenplan.js'
 import { PDF_PATH, isConfigured as loesungsbuchReady, search as searchLoesungsbuch } from './loesungsbuch.js'
 // fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
@@ -77,6 +79,48 @@ app.get('/api/stundenplan', (req, res) => {
 })
 
 // Obsidian-Vault (nur lesend, per Syncthing gespiegelt).
+// WHOOP: Recovery, Strain, Schlaf (nur Kennzahlen, keine Tokens ans Frontend).
+app.get('/api/whoop', async (req, res) => {
+  try {
+    res.json(await fetchWhoop())
+  } catch (err) {
+    console.error('whoop error:', err.message)
+    res.status(502).json({ error: 'WHOOP nicht erreichbar' })
+  }
+})
+
+// Schlaf-Tab: 30-Tage-Verlauf + Empfehlungen (Kalender fließt für Prüfungen ein).
+app.get('/api/sleep', async (req, res) => {
+  try {
+    const history = await fetchWhoopHistory()
+    if (!history.connected) return res.json(history)
+    const events = isConfigured.calendar
+      ? await fetchCalendarEvents()
+          .then((r) => r.events ?? r)
+          .catch(() => [])
+      : []
+    res.json({ ...history, coaching: buildCoaching({ days: history.days, events }) })
+  } catch (err) {
+    console.error('sleep error:', err.message)
+    res.status(502).json({ error: 'WHOOP nicht erreichbar' })
+  }
+})
+
+app.get('/api/whoop/link', (req, res) => {
+  if (!whoopReady()) return res.status(400).json({ error: 'WHOOP_CLIENT_ID/SECRET fehlen in der .env' })
+  res.json({ url: authLink() })
+})
+
+app.post('/api/whoop/link', async (req, res) => {
+  try {
+    await completeLink(req.body?.url)
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('whoop link error:', err.message)
+    res.status(400).json({ error: err.message })
+  }
+})
+
 app.get('/api/vault', (req, res) => {
   try {
     res.json(getVault())
