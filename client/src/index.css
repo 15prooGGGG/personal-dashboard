@@ -1331,6 +1331,99 @@ button {
   }
 }
 
+/* Second Brain (Obsidian-Vault) --------------------------------------------- */
+/* Aufgabentexte aus dem Vault sind ganze Sätze. Sie dürfen deshalb – anders
+   als die kurzen Titel in .row__title – umbrechen statt abgeschnitten zu
+   werden; hochkant auf dem Handy war sonst nach vier Wörtern Schluss. */
+.vt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rows > .vt:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.rows > .vt:first-child {
+  padding-top: 0;
+}
+.vt__dot {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  border-radius: 5px;
+  border: 2px solid var(--line-strong);
+}
+.vt__main {
+  flex: 1;
+  min-width: 0;
+}
+.vt__text {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.vt__note {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* Rest der Liste aufklappen – auf dem Handy die Rettung vor 60 Zeilen. */
+.vt__more {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vt__more:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.vt-proj {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rows > .vt-proj:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.rows > .vt-proj:first-child {
+  padding-top: 0;
+}
+.vt-proj__main {
+  flex: 1;
+  min-width: 0;
+}
+.vt-proj__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.vt-proj__meta {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 /* Zustände ------------------------------------------------------------------ */
 .state {
   padding: 22px 16px;
@@ -1485,7 +1578,7 @@ code {
 
 @media (max-width: 560px) {
   .bento {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .bento__wide,
   .bento__full {
@@ -1497,6 +1590,10 @@ code {
   .chip {
     min-width: 72px;
     font-size: 0.6rem;
+  }
+  /* Second Brain: hochkant zählt jeder Millimeter Textbreite. */
+  .vt-card {
+    padding: 15px 15px 17px;
   }
 }
 

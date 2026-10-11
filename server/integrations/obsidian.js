@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const VAULT_DIR = process.env.VAULT_DIR || path.resolve(__dirname, '../../vault')
 
 const TTL = 60 * 1000
-const MAX_TASKS = 60
+const MAX_TASKS = 200
 let cache = null
 
 // Nicht durchsuchen: Obsidian-Interna, Syncthing-Marker, Werkzeug-Ordner.
@@ -91,7 +91,10 @@ function readVault() {
     const folder = path.dirname(rel) === '.' ? '' : path.dirname(rel)
     const fm = parseFrontmatter(text)
 
-    const open = [...text.matchAll(/^[ \t]*[-*]\s\[ \]\s*(.+)$/gm)].map((m) => cleanTask(m[1]))
+    // Vorlagen-Platzhalter wie "[Wird vom Nutzer gefüllt]" sind keine Aufgaben.
+    const open = [...text.matchAll(/^[ \t]*[-*]\s\[ \]\s*(.+)$/gm)]
+      .map((m) => cleanTask(m[1]))
+      .filter((t) => t && !/^\[[^\]]*\]$/.test(t))
     const done = (text.match(/^[ \t]*[-*]\s\[[xX]\]/gm) || []).length
 
     for (const t of open) {

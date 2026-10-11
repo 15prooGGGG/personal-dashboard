@@ -1,6 +1,11 @@
+import { useState } from 'react'
 import PageSection from '../components/PageSection.tsx'
 import { VaultIcon } from '../components/icons.tsx'
 import { useApi } from '../lib/useApi.ts'
+
+// Auf dem Handy (hochkant) ist die Liste sonst endlos – erst ein Auszug,
+// den Rest auf Knopfdruck.
+const TASK_PREVIEW = 8
 
 interface VaultProject {
   title: string
@@ -27,6 +32,7 @@ interface VaultResponse {
 
 export default function VaultSection() {
   const { data, loading, error } = useApi<VaultResponse>('/api/vault', 5 * 60 * 1000)
+  const [allTasks, setAllTasks] = useState(false)
 
   if (loading) {
     return (
@@ -63,6 +69,7 @@ export default function VaultSection() {
   }
 
   const { counts, projects = [], tasks = [] } = data
+  const shownTasks = allTasks ? tasks : tasks.slice(0, TASK_PREVIEW)
 
   return (
     <PageSection
@@ -72,30 +79,42 @@ export default function VaultSection() {
     >
       <div className="bento">
         {/* Offene Aufgaben aus allen Notizen */}
-        <article className="card bento__wide">
+        <article className="card vt-card bento__wide">
           <div className="card__head">
             <h3 className="card__title">Offene Aufgaben</h3>
-            <span className="sec__note">{counts?.openTasks ?? 0} gesamt</span>
+            <span className="sec__note">{counts?.openTasks ?? tasks.length} gesamt</span>
           </div>
           {tasks.length === 0 ? (
             <div className="state">Keine offenen Aufgaben im Vault.</div>
           ) : (
-            <ul className="rows">
-              {tasks.map((t, i) => (
-                <li className="row" key={`${t.note}-${i}`}>
-                  <span className="todo__check" aria-hidden />
-                  <div className="row__main">
-                    <div className="row__title">{t.text}</div>
-                    <div className="row__meta">{t.note}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="rows">
+                {shownTasks.map((t, i) => (
+                  <li className="vt" key={`${t.note}-${i}`}>
+                    <span className="vt__dot" aria-hidden />
+                    <div className="vt__main">
+                      <p className="vt__text">{t.text}</p>
+                      <p className="vt__note">{t.note}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {tasks.length > TASK_PREVIEW && (
+                <button
+                  type="button"
+                  className="vt__more"
+                  onClick={() => setAllTasks((v) => !v)}
+                  aria-expanded={allTasks}
+                >
+                  {allTasks ? 'Weniger anzeigen' : `Alle ${tasks.length} anzeigen`}
+                </button>
+              )}
+            </>
           )}
         </article>
 
         {/* Projekte mit Fortschritt */}
-        <article className="card">
+        <article className="card vt-card">
           <div className="card__head">
             <h3 className="card__title">Projekte</h3>
             <span className="sec__note">{projects.length}</span>
@@ -105,10 +124,13 @@ export default function VaultSection() {
           ) : (
             <ul className="rows">
               {projects.map((p) => (
-                <li className="row" key={p.path}>
-                  <div className="row__main">
-                    <div className="row__title">{p.title}</div>
-                    {p.status && <div className="row__meta">{p.status}</div>}
+                <li className="vt-proj" key={p.path}>
+                  <div className="vt-proj__main">
+                    <p className="vt-proj__title">{p.title}</p>
+                    {/* "aktiv" ist der Normalfall – nur Abweichungen zeigen. */}
+                    {p.status && p.status.toLowerCase() !== 'aktiv' && (
+                      <p className="vt-proj__meta">{p.status}</p>
+                    )}
                   </div>
                   <span className={`cd ${p.openTasks > 0 ? 'is-soon' : ''}`}>
                     {p.openTasks} offen
