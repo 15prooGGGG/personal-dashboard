@@ -6,6 +6,7 @@ import { formatCurrency, formatPercent, deltaClass } from '../lib/format.ts'
 import { countdownLabel, daysUntil, relativeTime } from '../lib/time.ts'
 import type { Quote, CalendarEvent, Todo, MailItem, NewsItem } from '../types.ts'
 import { DEFAULT_SYMBOL } from './MarketsSection.tsx'
+import CountUp from '../components/CountUp.tsx'
 
 interface OverviewProps {
   quotes: Quote[]
@@ -39,7 +40,7 @@ export default function OverviewSection({ quotes, onOpen }: OverviewProps) {
               <div className="hero__name">{hero?.name ?? 'Märkte'}</div>
               <div className="hero__value">
                 <span className="hero__price">
-                  {hero?.price != null ? formatCurrency(hero.price, hero.currency) : '–'}
+                  <CountUp value={hero?.price} format={(v) => formatCurrency(v, hero?.currency)} />
                 </span>
                 {hero?.changePercent != null && (
                   <span className={`delta ${deltaClass(hero.changePercent)}`}>
@@ -61,17 +62,17 @@ export default function OverviewSection({ quotes, onOpen }: OverviewProps) {
             <h3 className="card__title">Dein Tag</h3>
           </div>
           <div className="stat">
-            <div className="stat__value">{today.length}</div>
+            <div className="stat__value"><CountUp value={today.length} /></div>
             <div className="stat__label">{today.length === 1 ? 'Termin heute' : 'Termine heute'}</div>
           </div>
           <div className="stat">
-            <div className="stat__value">{openTodos.length}</div>
+            <div className="stat__value"><CountUp value={openTodos.length} /></div>
             <div className="stat__label">
               {openTodos.length === 1 ? 'offene Aufgabe' : 'offene Aufgaben'}
             </div>
           </div>
           <div className="stat">
-            <div className="stat__value">{mail.data?.mails?.length ?? 0}</div>
+            <div className="stat__value"><CountUp value={mail.data?.mails?.length ?? 0} /></div>
             <div className="stat__label">wichtige Mails</div>
           </div>
         </article>

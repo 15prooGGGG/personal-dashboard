@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useApi } from '../lib/useApi.ts'
+import { useMounted } from '../lib/motion.ts'
+import CountUp from './CountUp.tsx'
 
 interface WhoopData {
   configured: boolean
@@ -20,17 +22,22 @@ function recoveryTone(score: number) {
 function Ring({
   fraction,
   value,
+  format,
   label,
   color = 'var(--accent)'
 }: {
   fraction: number | null
-  value: string
+  value: number | null
+  format: (v: number) => string
   label: string
   color?: string
 }) {
   const r = 30
   const c = 2 * Math.PI * r
-  const f = fraction == null ? 0 : Math.max(0, Math.min(1, fraction))
+  // Erst leer einhängen, dann füllen – so zeichnet sich der Ring beim
+  // Erscheinen über die CSS-Transition auf.
+  const mounted = useMounted()
+  const f = fraction == null || !mounted ? 0 : Math.max(0, Math.min(1, fraction))
   return (
     <div className="whoop__ring">
       <svg viewBox="0 0 72 72" aria-hidden>
@@ -43,7 +50,9 @@ function Ring({
           style={{ stroke: color, strokeDasharray: `${f * c} ${c}` }}
         />
       </svg>
-      <span className="whoop__value">{value}</span>
+      <span className="whoop__value">
+        <CountUp value={value} format={format} duration={1100} />
+      </span>
       <span className="whoop__label">{label}</span>
     </div>
   )
@@ -147,19 +156,22 @@ export default function WhoopCard() {
         <div className="whoop__rings">
           <Ring
             fraction={recovery ? recovery.score / 100 : null}
-            value={recovery ? `${Math.round(recovery.score)}%` : '–'}
+            value={recovery ? recovery.score : null}
+            format={(v) => `${Math.round(v)}%`}
             label="Recovery"
             color={recovery ? recoveryTone(recovery.score) : undefined}
           />
           {/* Strain läuft bei WHOOP von 0 bis 21. */}
           <Ring
             fraction={strain != null ? strain / 21 : null}
-            value={strain != null ? strain.toFixed(1) : '–'}
+            value={strain ?? null}
+            format={(v) => v.toFixed(1)}
             label="Strain"
           />
           <Ring
             fraction={sleep ? sleep.performance / 100 : null}
-            value={sleep ? `${Math.round(sleep.performance)}%` : '–'}
+            value={sleep ? sleep.performance : null}
+            format={(v) => `${Math.round(v)}%`}
             label="Schlaf"
           />
         </div>

@@ -4,6 +4,7 @@ import SleepChart from '../components/SleepChart.tsx'
 import { WhoopConnect } from '../components/WhoopCard.tsx'
 import { MoonIcon } from '../components/icons.tsx'
 import { useApi } from '../lib/useApi.ts'
+import CountUp from '../components/CountUp.tsx'
 
 interface Sleep {
   bedtime: string
@@ -196,7 +197,9 @@ export default function SleepSection() {
                 aria-pressed={x.key === metric}
               >
                 <div className="tile__label">{x.label}</div>
-                <div className="tile__value">{v != null ? x.format(v) : '–'}</div>
+                <div className="tile__value">
+                  <CountUp value={v} format={x.format} />
+                </div>
               </button>
             )
           })}
@@ -208,7 +211,10 @@ export default function SleepSection() {
             <div>
               <div className="hero__name">{m.label}</div>
               <div className="hero__value">
-                <span className="hero__price">{latest != null ? m.format(latest) : '–'}</span>
+                <span className="hero__price">
+                  {/* key: Andere Kennzahl, andere Einheit – neu ab 0 zählen. */}
+                  <CountUp key={metric} value={latest} format={m.format} />
+                </span>
                 {latest != null && before != null && (
                   <span className={`delta ${latest >= before ? 'up' : 'down'}`}>{m.delta(latest, before)}</span>
                 )}
@@ -292,11 +298,15 @@ export default function SleepSection() {
             <h3 className="card__title">Gestern</h3>
           </div>
           <div className="stat">
-            <div className="stat__value">{yesterday?.strain != null ? yesterday.strain.toFixed(1).replace('.', ',') : '–'}</div>
+            <div className="stat__value">
+              <CountUp value={yesterday?.strain} format={(v) => v.toFixed(1).replace('.', ',')} />
+            </div>
             <div className="stat__label">Strain</div>
           </div>
           <div className="stat">
-            <div className="stat__value">{yesterday?.steps != null ? yesterday.steps.toLocaleString('de-DE') : '–'}</div>
+            <div className="stat__value">
+              <CountUp value={yesterday?.steps} />
+            </div>
             <div className="stat__label">Schritte</div>
           </div>
           {data.workoutsAvailable ? (

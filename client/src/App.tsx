@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import Rail from './components/Rail.tsx'
 import TopBar from './components/TopBar.tsx'
 import PlaceholderSection from './components/PlaceholderSection.tsx'
@@ -17,6 +17,7 @@ import { GlobeIcon, TrendingIcon } from './components/icons.tsx'
 import { NAV } from './nav.tsx'
 import { useTheme } from './lib/useTheme.ts'
 import { useStocks } from './lib/useStocks.ts'
+import { useStaggerReveal } from './lib/motion.ts'
 
 // pdf.js ist schwergewichtig (~300 KB gzip) – nur laden, wenn der Tab offen ist.
 const LoesungsbuchSection = lazy(() => import('./modules/LoesungsbuchSection.tsx'))
@@ -26,6 +27,8 @@ export default function App() {
   const stocks = useStocks()
   const [active, setActive] = useState('home')
   const [collapsed, setCollapsed] = useState(false)
+  const viewRef = useRef<HTMLDivElement>(null)
+  useStaggerReveal(viewRef, active)
 
   const activeItem = NAV.find((n) => n.id === active) ?? NAV[0]
 
@@ -85,7 +88,11 @@ export default function App() {
         />
         <main className="main">
           <TopBar theme={theme} onToggleTheme={toggle} />
-          {renderSection()}
+          {/* key: Bei jedem Tabwechsel neu einhängen, damit die Karten
+              gestaffelt einblenden (Reihenfolge per useStaggerReveal). */}
+          <div className="view" key={active} ref={viewRef}>
+            {renderSection()}
+          </div>
         </main>
       </div>
     </div>

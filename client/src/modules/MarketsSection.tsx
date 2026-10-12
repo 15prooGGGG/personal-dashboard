@@ -2,6 +2,7 @@ import { useState } from 'react'
 import PriceChart from '../components/PriceChart.tsx'
 import type { Quote } from '../types.ts'
 import { formatCurrency, formatPercent, deltaClass } from '../lib/format.ts'
+import CountUp from '../components/CountUp.tsx'
 
 export const RANGES = [
   { key: '1M', range: '1mo', interval: '1d' },
@@ -74,7 +75,9 @@ export default function MarketsSection({ quotes, loading, error, reload }: Marke
                 aria-pressed={q.symbol === symbol}
               >
                 <div className="tile__label">{q.short}</div>
-                <div className="tile__value">{q.price != null ? formatCurrency(q.price, q.currency) : '–'}</div>
+                <div className="tile__value">
+                  <CountUp value={q.price} format={(v) => formatCurrency(v, q.currency)} />
+                </div>
                 <div className={`tile__delta ${deltaClass(q.changePercent)}`}>
                   {q.changePercent != null ? formatPercent(q.changePercent) : ''}
                 </div>
@@ -88,7 +91,12 @@ export default function MarketsSection({ quotes, loading, error, reload }: Marke
             <div className="hero__name">{selected?.name ?? ''}</div>
             <div className="hero__value">
               <span className="hero__price">
-                {selected?.price != null ? formatCurrency(selected.price, selected.currency) : '–'}
+                {/* key: Beim Wechsel des Werts neu ab 0 zählen statt von Kurs zu Kurs. */}
+                <CountUp
+                  key={selected?.symbol}
+                  value={selected?.price}
+                  format={(v) => formatCurrency(v, selected?.currency)}
+                />
               </span>
               {selected?.changePercent != null && (
                 <span className={`delta ${deltaClass(selected.changePercent)}`}>
