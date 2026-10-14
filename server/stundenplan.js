@@ -44,6 +44,10 @@ export function weekFor(date) {
 
 const DAY_NAMES = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
 
+// Lokales Datum als YYYY-MM-DD (toISOString wäre UTC und kippt nachts).
+const isoDate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
 function minutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number)
   return h * 60 + m
@@ -88,9 +92,31 @@ export function getStundenplan(now = new Date()) {
     if (!next && l.start && minutes(l.start) > nowMin && l.type === 'lesson') next = l.period
   }
 
+  // Nächster Schultag für die Startseite: heute, solange noch Unterricht
+  // kommt, sonst der nächste Tag mit Stunden (über Wochenenden hinweg, mit
+  // der dann gültigen A/B-Woche).
+  const upcoming = (() => {
+    const lastEnd = today.filter((l) => l.type === 'lesson' && l.end).map((l) => minutes(l.end)).pop()
+    if (today.length && lastEnd != null && nowMin < lastEnd) {
+      return { date: isoDate(now), day: dayName, week, inDays: 0, lessons: today }
+    }
+    for (let add = 1; add <= 7; add++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + add, 12)
+      const name = DAY_NAMES[d.getDay()]
+      const w = weekFor(d)
+      if (!w || !plan.days.includes(name)) continue
+      const lessons = lessonsFor(plan, w, name)
+      if (lessons.length) {
+        return { date: isoDate(d), day: name, week: w, inDays: add, lessons }
+      }
+    }
+    return null
+  })()
+
   return {
     configured: true,
     meta: plan.meta,
+    upcoming,
     days: plan.days,
     weeks: plan.weeks,
     times: PERIOD_TIMES,

@@ -87,7 +87,7 @@ export default function App() {
           onToggleCollapse={() => setCollapsed((c) => !c)}
         />
         <main className="main">
-          <TopBar theme={theme} onToggleTheme={toggle} />
+          <TopBar theme={theme} onToggleTheme={toggle} minimal={active === 'home'} />
           {/* key: Bei jedem Tabwechsel neu einhängen, damit die Karten
               gestaffelt einblenden (Reihenfolge per useStaggerReveal). */}
           <div className="view" key={active} ref={viewRef}>

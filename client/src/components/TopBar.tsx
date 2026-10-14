@@ -6,6 +6,8 @@ import { SunIcon, MoonIcon } from './icons.tsx'
 interface TopBarProps {
   theme: Theme
   onToggleTheme: () => void
+  /** Startseite: Begrüßung übernimmt die Seite selbst, hier nur die Aktionen. */
+  minimal?: boolean
 }
 
 // Xetra-Handelszeiten (Mo–Fr, 09:00–17:30), bewertet nach lokaler Zeit.
@@ -15,7 +17,7 @@ function marketOpen(now: Date): boolean {
   return day >= 1 && day <= 5 && mins >= 540 && mins < 1050
 }
 
-export default function TopBar({ theme, onToggleTheme }: TopBarProps) {
+export default function TopBar({ theme, onToggleTheme, minimal }: TopBarProps) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000)
@@ -26,13 +28,15 @@ export default function TopBar({ theme, onToggleTheme }: TopBarProps) {
   const clock = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <header className="head">
-      <div>
-        <h1 className="head__greeting">{greeting(now)}, Lauri</h1>
-        <p className="head__date">
-          {formatFullDate(now)} · {clock} Uhr
-        </p>
-      </div>
+    <header className={`head ${minimal ? 'head--minimal' : ''}`}>
+      {!minimal && (
+        <div>
+          <h1 className="head__greeting">{greeting(now)}, Lauri</h1>
+          <p className="head__date">
+            {formatFullDate(now)} · {clock} Uhr
+          </p>
+        </div>
+      )}
       <div className="head__actions">
         <span className="statuspill">
           <span className={`statuspill__dot ${open ? 'is-open' : ''}`} />
