@@ -1981,7 +1981,16 @@ code {
 .sx-pill { position: absolute; left: 0; top: 0; z-index: -1; border-radius: 999px; background: var(--surface-2); overflow: hidden; transition: transform 0.55s var(--ease-out), width 0.55s var(--ease-out), height 0.55s var(--ease-out); }
 .sx-pill::after { content: ''; position: absolute; left: 0; bottom: 0; height: 2px; width: calc(var(--p, 0) * 100%); background: var(--ink); opacity: 0.25; }
 .sx-stage { position: relative; width: 100%; aspect-ratio: 1.42; transition: translate 0.6s var(--ease-out); }
-.sx-host { position: absolute; inset: 0; transform-origin: 50% 0; }
+.sx-host { position: absolute; inset: 0; transform-origin: 50% 0; z-index: 1; }
+/* Weicher Farbschein hinter dem Stapel in der Farbe des aktiven Bereichs –
+   blendet beim Scrollen von Bereich zu Bereich über. Bewusst sehr leise. */
+.sx-glow {
+  position: absolute; left: 6%; right: 6%; top: 8%; bottom: 4%; z-index: 0;
+  border-radius: 50%; filter: blur(80px); opacity: 0.38; pointer-events: none;
+  transition: background-color 0.9s var(--ease-out);
+}
+:root[data-theme='dark'] .sx-glow { opacity: 0.2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .sx-glow { opacity: 0.2; } }
 .sx-screen {
   position: absolute; border-radius: 22px; overflow: hidden; padding: 18px;
   background-color: var(--surface-2); background-size: cover; background-position: center;

@@ -27,6 +27,8 @@ export interface ShowcaseArea {
   id: string
   name: string
   openLabel: string
+  /** Farbe des weichen Scheins hinter dem Stapel, solange der Bereich aktiv ist. */
+  glow: string
   onOpen: () => void
   cards: ShowcaseCard[]
 }
@@ -283,6 +285,7 @@ export default function Showcase({
           </div>
 
           <div className="sx-stage" ref={stageRef} onPointerMove={onStageMove}>
+            <div className="sx-glow" style={{ backgroundColor: areas[active]?.glow }} aria-hidden />
             <div className="sx-host" ref={hostRef}>
               {flat.map((c, i) => (
                 <div

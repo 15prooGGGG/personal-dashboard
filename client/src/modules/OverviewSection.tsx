@@ -189,6 +189,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       id: 'body',
       name: 'Körper',
       openLabel: 'Schlaf öffnen',
+      glow: '#6fd3c0',
       onOpen: () => onOpen('sleep'),
       cards: [
         {
@@ -279,6 +280,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       id: 'school',
       name: 'Schule',
       openLabel: 'Stundenplan öffnen',
+      glow: '#ff8f6b',
       onOpen: () => onOpen('stundenplan'),
       cards: [
         {
@@ -369,6 +371,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       id: 'money',
       name: 'Geld',
       openLabel: 'Aktien öffnen',
+      glow: '#7aa2ff',
       onOpen: () => onOpen('stocks'),
       cards: [
         {
@@ -430,6 +433,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       id: 'projects',
       name: 'Projekte',
       openLabel: 'Second Brain öffnen',
+      glow: '#c58ce8',
       onOpen: () => onOpen('vault'),
       cards: [
         {
@@ -492,6 +496,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       id: 'agenda',
       name: 'Termine',
       openLabel: 'Kalender öffnen',
+      glow: '#9fd36b',
       onOpen: () => onOpen('calendar'),
       cards: [
         {
