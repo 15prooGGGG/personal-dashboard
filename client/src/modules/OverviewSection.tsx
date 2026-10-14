@@ -78,7 +78,8 @@ function mergeLessons(lessons: Lesson[]) {
   for (const l of lessons) {
     if (l.type !== 'lesson' || !l.start || !l.end) continue
     const prev = out[out.length - 1]
-    if (prev && prev.subject === l.subject && prev.end === l.start) {
+    // Gleiches Fach in direkt folgender Stunde = Doppelstunde (Pausen dazwischen egal).
+    if (prev && prev.subject === l.subject && prev.to + 1 === l.period) {
       prev.end = l.end
       prev.to = l.period
     } else {
