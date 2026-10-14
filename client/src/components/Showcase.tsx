@@ -141,7 +141,8 @@ export default function Showcase({
       const scale = (0.78 + 0.22 * e) * (1 - depth * 0.04)
       const lift = (narrow ? -depth * 12 : -depth * 16) + (1 - e) * 60
       el.style.transform = `translateY(${lift}px) scale(${scale})`
-      el.style.opacity = String(clamp(reveal * 3, 0, 1))
+      // Schnell deckend, damit die Karte darunter nicht durchscheint.
+      el.style.opacity = String(clamp(reveal * 7, 0, 1))
       el.style.setProperty('--dim', String(Math.min(0.5, depth * 0.12)))
       if (reveal > 0.6) el.dataset.live = ''
     })
