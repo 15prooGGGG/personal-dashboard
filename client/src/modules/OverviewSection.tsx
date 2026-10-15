@@ -559,7 +559,14 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   // ---- Tagesregler -------------------------------------------------------
   const todayBlocks = plan.data?.day ? mergeLessons(plan.data.today) : []
   const bedtime = coachPlan?.bedtime ?? null
+  // Benannte Pausen aus dem Stundenplan (z. B. Mittagspause 13:00–14:00)
+  const breakBlocks: RulerBlock[] = plan.data?.day
+    ? plan.data.today
+        .filter((l) => l.type === 'break' && l.subject && l.start && l.end)
+        .map((l) => ({ start: l.start!, end: l.end!, name: l.subject!, kind: 'break' as const, info: `${l.start}–${l.end}` }))
+    : []
   const rulerBlocks: RulerBlock[] = [
+    ...breakBlocks,
     ...todayBlocks.map((b) => ({
       start: b.start,
       end: b.end,

@@ -205,7 +205,9 @@ export default function Showcase({
         el.style.transform = tf
         c.tf = tf
       }
-      const op = clamp(reveal * 7, 0, 1).toFixed(2)
+      // Praktisch sofort deckend – sonst scheint die Karte darunter durch
+      // (auf dem Handy liegen die Karten exakt übereinander).
+      const op = clamp(reveal * 14, 0, 1).toFixed(2)
       if (op !== c.op) {
         el.style.opacity = op
         c.op = op
@@ -276,6 +278,11 @@ export default function Showcase({
   // Knopf rechts: Text weich tauschen, Pille nachziehen
   useEffect(() => {
     placePill(active)
+    const list = listRef.current
+    const btn = list?.querySelectorAll<HTMLButtonElement>('.sx-cat')[active]
+    if (list && btn && list.scrollWidth > list.clientWidth) {
+      list.scrollTo({ left: btn.offsetLeft - (list.clientWidth - btn.offsetWidth) / 2, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    }
     setLabelSwap(true)
     const t = setTimeout(() => {
       setLabel(areas[active]?.openLabel ?? '')
@@ -324,9 +331,11 @@ export default function Showcase({
         kick()
       })
     })
+    // Beobachtet wird der Inhalt mit seiner natürlichen Höhe – nicht die Karte,
+    // die auf dem Handy eine feste Höhe hat (dort meldet sie Wachstum nie).
     cardEls.current.forEach((el) => {
-      const inner = el?.querySelector('.sx-in')
-      if (inner) ro.observe(inner)
+      const body = el?.querySelector('.sx-body')
+      if (body) ro.observe(body)
     })
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
@@ -434,7 +443,9 @@ export default function Showcase({
                     zIndex: i + 1
                   }}
                 >
-                  <div className="sx-in">{contents[i]}</div>
+                  <div className="sx-in">
+                    <div className="sx-body">{contents[i]}</div>
+                  </div>
                   <div
                     className="sx-dim"
                     ref={(el) => {

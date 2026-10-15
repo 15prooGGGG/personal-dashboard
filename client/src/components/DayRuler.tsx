@@ -11,7 +11,7 @@ export interface RulerBlock {
   start: string // HH:MM
   end: string
   name: string
-  kind: 'school' | 'free' | 'sleep'
+  kind: 'school' | 'break' | 'free' | 'sleep'
   info: string
 }
 

@@ -2004,9 +2004,10 @@ code {
 .sx-dim { position: absolute; inset: 0; border-radius: inherit; background: var(--shell); opacity: 0; pointer-events: none; will-change: opacity; }
 .sx-in {
   height: 100%; border-radius: 13px; overflow: hidden; background: var(--surface); color: var(--ink);
-  padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 18px;
   box-shadow: 0 14px 28px -16px rgba(10, 12, 20, 0.55);
 }
+.sx-body { min-height: 100%; display: flex; flex-direction: column; gap: 10px; }
 .sx-screen.is-dark .sx-in { background: #0d1017; color: #eef1f8; }
 .sx-screen.is-dark .sx-lab, .sx-screen.is-dark .sx-meta { color: #8e95a8; }
 .sx-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -2076,6 +2077,7 @@ code {
 .dr-past { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--hatch-bg) 0 4px, transparent 4px 9px); border-right: 1.5px solid var(--accent); }
 .dr-blk { position: absolute; top: 7px; bottom: 7px; border-radius: 9px; font-size: 0.7rem; font-weight: 600; padding: 0 7px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; transition: filter 0.25s var(--ease-out), transform 0.25s var(--ease-out); }
 .dr-blk.is-school { background: color-mix(in srgb, var(--warm) 16%, var(--surface)); color: color-mix(in srgb, var(--warm) 80%, var(--ink)); }
+.dr-blk.is-break { background: var(--surface-2); color: var(--muted); }
 .dr-blk.is-free { background: color-mix(in srgb, var(--good) 12%, var(--surface)); color: color-mix(in srgb, var(--good) 70%, var(--ink)); }
 .dr-blk.is-sleep { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent-deep); }
 .dr-blk.is-hit { transform: scaleY(1.12); filter: saturate(1.4); }
