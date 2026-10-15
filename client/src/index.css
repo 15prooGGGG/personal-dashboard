@@ -1962,7 +1962,12 @@ code {
 .ov-tok i { width: 0.5em; height: 0.5em; border-radius: 50%; }
 
 /* Bühne (Showcase) */
-.sx { position: relative; overflow-x: clip; }
+.sx { position: relative; }
+/* Startseite: keine Zuschnitte (overflow) über der stehenden Bühne. Safari auf
+   dem iPhone positioniert sticky-Elemente sonst im Hauptthread nach – ein Bild
+   zu spät – und die Bühne zittert beim Scrollen. */
+.app.is-home .shell,
+.app.is-home .main { overflow: visible; }
 .sx-sticky { position: sticky; top: 12px; height: calc(100svh - 24px); display: flex; flex-direction: column; justify-content: center; }
 .sx-title { margin: 0 0 24px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: clamp(1.6rem, 2.6vw, 2.3rem); letter-spacing: -0.03em; flex-shrink: 0; }
 .sx-grid { display: grid; grid-template-columns: 210px minmax(0, 1fr) auto; gap: 28px; align-items: center; }
@@ -1985,8 +1990,9 @@ code {
 /* Weicher Farbschein hinter dem Stapel in der Farbe des aktiven Bereichs –
    blendet beim Scrollen von Bereich zu Bereich über. Bewusst sehr leise. */
 .sx-glow {
-  /* Weicher Verlauf statt Weichzeichner-Filter: kostet beim Überblenden nichts. */
-  position: absolute; left: -8%; right: -8%; top: -6%; bottom: -10%; z-index: 0;
+  /* Weicher Verlauf statt Weichzeichner-Filter: kostet beim Überblenden nichts.
+     Bleibt innerhalb der Bühne – darüber hinaus gäbe es seitliches Scrollen. */
+  position: absolute; inset: 0; z-index: 0;
   opacity: 0; pointer-events: none; will-change: opacity;
   transition: opacity 0.9s var(--ease-out);
 }

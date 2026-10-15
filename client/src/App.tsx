@@ -77,7 +77,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${active === 'home' ? 'is-home' : ''}`}>
       <div className="shell">
         <Rail
           items={NAV}

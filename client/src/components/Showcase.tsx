@@ -104,7 +104,8 @@ export default function Showcase({
     lastT: 0,
     cache: [] as CardState[],
     activeK: 0,
-    idx: 0
+    idx: 0,
+    smooth: window.matchMedia('(pointer: fine)').matches
   })
   st.current.narrow = narrow
   st.current.flat = flat
@@ -256,7 +257,9 @@ export default function Showcase({
       const dt = s.lastT ? Math.min(64, now - s.lastT) : 16
       s.lastT = now
       const diff = s.target - s.shown
-      if (prefersReducedMotion() || Math.abs(diff) < 0.002) {
+      // Touch scrollt ohnehin weich – Nachlauf fühlt sich dort schwammig an.
+      // Geglättet wird nur für Maus/Trackpad (Mausrad springt in Stufen).
+      if (prefersReducedMotion() || !s.smooth || Math.abs(diff) < 0.002) {
         s.shown = prefersReducedMotion() ? Math.round(s.target) : s.target
         draw(s.shown)
         s.raf = 0
