@@ -125,6 +125,45 @@ export async function fetchHistory(symbol, range = '1mo', interval = '1d') {
   return out
 }
 
+// Kennzahlen zu einem einzelnen Wert (Aktien-Detailansicht) --------------------
+// Yahoo liefert im Quote-Endpunkt deutlich mehr als nur den Kurs; für die
+// Detailansicht reichen die gängigen Marktdaten. Fehlende Felder bleiben null
+// (bei ETFs gibt es z. B. kein KGV).
+const detailCache = makeCache(5 * 60 * 1000)
+export async function fetchDetails(symbol) {
+  const cached = detailCache.get(symbol)
+  if (cached) return cached
+  const data = await yahoo('https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbol))
+  const q = data.quoteResponse?.result?.[0]
+  if (!q) throw new Error('Unbekanntes Symbol')
+  const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+  const out = {
+    symbol,
+    name: q.longName || q.shortName || symbol,
+    exchange: q.fullExchangeName || q.exchange || null,
+    currency: q.currency || 'EUR',
+    quoteType: q.quoteType || null,
+    price: n(q.regularMarketPrice),
+    open: n(q.regularMarketOpen),
+    dayLow: n(q.regularMarketDayLow),
+    dayHigh: n(q.regularMarketDayHigh),
+    previousClose: n(q.regularMarketPreviousClose),
+    volume: n(q.regularMarketVolume),
+    avgVolume: n(q.averageDailyVolume3Month),
+    yearLow: n(q.fiftyTwoWeekLow),
+    yearHigh: n(q.fiftyTwoWeekHigh),
+    marketCap: n(q.marketCap),
+    pe: n(q.trailingPE),
+    forwardPe: n(q.forwardPE),
+    dividendYield: n(q.trailingAnnualDividendYield),
+    avg50: n(q.fiftyDayAverage),
+    avg200: n(q.twoHundredDayAverage),
+    marketTime: n(q.regularMarketTime)
+  }
+  detailCache.set(symbol, out)
+  return out
+}
+
 // Sparkline-Punkte für die Watchlist -----------------------------------------
 // WARUM HIER UND NICHT BEI FINNHUB: /stock/candle liegt dort hinter dem
 // Bezahltarif (403 im Free-Tier). Yahoo kennt dieselben US-Ticker und ist

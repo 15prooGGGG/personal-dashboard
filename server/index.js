@@ -2,9 +2,9 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { fetchQuotes, fetchHistory, fetchSparkline, WATCHLIST } from './stocks.js'
+import { fetchQuotes, fetchHistory, fetchSparkline, fetchDetails, WATCHLIST } from './stocks.js'
 import { isConfigured } from './config.js'
-import { fetchNews } from './integrations/news.js'
+import { fetchNews, fetchCompanyNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
 import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
@@ -58,6 +58,24 @@ app.get('/api/services', (req, res) => {
 })
 
 // News / Finanznews via RSS. ?type=world|finance
+// Aktien-Detail: Kennzahlen (Yahoo) + aktuelle Meldungen (Google News).
+// Beide Quellen unabhängig – fällt eine aus, kommt die andere trotzdem.
+app.get('/api/stocks/insights', async (req, res) => {
+  const symbol = String(req.query.symbol || '').trim()
+  if (!/^[A-Za-z0-9.^=-]{1,20}$/.test(symbol)) return res.status(400).json({ error: 'Ungültiges Symbol' })
+  const known = WATCHLIST.find((w) => w.symbol === symbol)
+  const d = await fetchDetails(symbol).catch((err) => (console.warn('stock details:', err.message), null))
+  // Suchbegriff: Kurzname aus der Watchlist, sonst Name ohne Rechtsform.
+  const base = (known?.short || d?.name || symbol).replace(/\b(SE|AG|Inc\.?|Corp\.?|plc|N\.V\.|UCITS ETF.*)$/i, '').trim()
+  const query = d?.quoteType === 'EQUITY' || !d ? `${base} Aktie` : base
+  const news = await fetchCompanyNews(query).then(
+    (v) => ({ ok: true, items: v }),
+    (err) => (console.warn('company news:', err.message), { ok: false, items: [] })
+  )
+  if (!d && !news.ok) return res.status(502).json({ error: 'Gerade keine Daten verfügbar' })
+  res.json({ symbol, query, details: d, news: news.items })
+})
+
 app.get('/api/news', async (req, res) => {
   try {
     const type = req.query.type === 'finance' ? 'finance' : 'world'

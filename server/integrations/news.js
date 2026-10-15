@@ -79,3 +79,40 @@ export async function fetchNews(type) {
   cache.set(key, { value, ts: Date.now() })
   return value
 }
+
+// Meldungen zu einem bestimmten Wert (Aktien-Detailansicht) ------------------
+// Google News bietet eine Suche als RSS-Feed (ohne Schlüssel) und bündelt
+// deutschsprachige Finanzquellen (finanzen.net, Der Aktionär, boerse.de …).
+// Der Titel endet dort mit " - Quelle"; die Quelle wird abgetrennt.
+const companyCache = new Map()
+const COMPANY_TTL = 15 * 60 * 1000
+
+export async function fetchCompanyNews(query, max = 12) {
+  const key = query.toLowerCase()
+  const hit = companyCache.get(key)
+  if (hit && Date.now() - hit.ts < COMPANY_TTL) return hit.value
+
+  if (!Parser) Parser = (await import('rss-parser')).default
+  const parser = new Parser({ timeout: 9000, headers: { 'User-Agent': 'Mozilla/5.0 (Morgen-Briefing RSS)' } })
+  const url =
+    'https://news.google.com/rss/search?q=' + encodeURIComponent(`${query} when:14d`) + '&hl=de&gl=DE&ceid=DE:de'
+  const feed = await parser.parseURL(url)
+
+  const seen = new Set()
+  const items = []
+  for (const it of feed.items || []) {
+    const raw = (it.title || '').trim()
+    const cut = raw.lastIndexOf(' - ')
+    const title = cut > 20 ? raw.slice(0, cut).trim() : raw
+    const source = cut > 20 ? raw.slice(cut + 3).trim() : ''
+    // Viele Portale melden dasselbe fast wortgleich – nach Anfang entdoppeln.
+    const norm = title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim().slice(0, 48)
+    if (!title || seen.has(norm)) continue
+    seen.add(norm)
+    items.push({ id: it.guid || it.link || title, title, source, url: it.link || '#', publishedAt: it.isoDate || it.pubDate || null })
+  }
+  items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0))
+  const value = items.slice(0, max)
+  companyCache.set(key, { value, ts: Date.now() })
+  return value
+}

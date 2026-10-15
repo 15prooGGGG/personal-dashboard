@@ -3,6 +3,7 @@ import PriceChart from '../components/PriceChart.tsx'
 import type { Quote } from '../types.ts'
 import { formatCurrency, formatPercent, deltaClass } from '../lib/format.ts'
 import CountUp from '../components/CountUp.tsx'
+import StockInsights from '../components/StockInsights.tsx'
 
 export const RANGES = [
   { key: '1M', range: '1mo', interval: '1d' },
@@ -121,6 +122,8 @@ export default function MarketsSection({ quotes, loading, error, reload }: Marke
 
         <PriceChart symbol={symbol} range={range.range} interval={range.interval} />
       </div>
+
+      <StockInsights symbol={symbol} label={selected?.short ?? selected?.name ?? symbol} />
     </section>
   )
 }
