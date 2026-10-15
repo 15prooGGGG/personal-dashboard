@@ -271,7 +271,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
                   <b>{Math.round(night.efficiency)} %</b>
                 </div>
               )}
-              {coachPlan && <div className="sx-btn">Heute spätestens {coachPlan.bedtime} ins Bett</div>}
+              {coachPlan && <div className="sx-note">Heute spätestens {coachPlan.bedtime} ins Bett</div>}
             </>
           )
         }
@@ -397,7 +397,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
                     </pattern>
                   </defs>
                   <path d={chart.area} fill="url(#sx-hatch)" />
-                  <path className="sx-chart-line" d={chart.d} pathLength={1} fill="none" stroke="var(--accent-deep)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                  <path d={chart.d} fill="none" stroke="var(--accent-deep)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                 </svg>
               ) : (
                 <div className="sx-meta">Verlauf lädt …</div>
@@ -424,7 +424,9 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
                   </b>
                 </div>
               ))}
-              <div className="sx-btn">Watchlist öffnen</div>
+              <button className="sx-btn" onClick={() => onOpen('watchlist')}>
+                Watchlist öffnen
+              </button>
             </>
           )
         }

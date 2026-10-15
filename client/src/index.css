@@ -1979,25 +1979,29 @@ code {
 .sx-cat__count { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; margin-left: 10px; padding: 2px 7px; border-radius: 999px; background: var(--surface); color: var(--muted); opacity: 0; transform: translateX(-6px); transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out); }
 .sx-cat.is-active .sx-cat__count { opacity: 1; transform: none; }
 .sx-pill { position: absolute; left: 0; top: 0; z-index: -1; border-radius: 999px; background: var(--surface-2); overflow: hidden; transition: transform 0.55s var(--ease-out), width 0.55s var(--ease-out), height 0.55s var(--ease-out); }
-.sx-pill::after { content: ''; position: absolute; left: 0; bottom: 0; height: 2px; width: calc(var(--p, 0) * 100%); background: var(--ink); opacity: 0.25; }
-.sx-stage { position: relative; width: 100%; aspect-ratio: 1.42; transition: translate 0.6s var(--ease-out); }
+.sx-pill__bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--ink); opacity: 0.25; transform: scaleX(0); transform-origin: left; }
+.sx-stage { position: relative; width: 100%; aspect-ratio: 1.42; }
 .sx-host { position: absolute; inset: 0; transform-origin: 50% 0; z-index: 1; }
 /* Weicher Farbschein hinter dem Stapel in der Farbe des aktiven Bereichs –
    blendet beim Scrollen von Bereich zu Bereich über. Bewusst sehr leise. */
 .sx-glow {
-  position: absolute; left: 6%; right: 6%; top: 8%; bottom: 4%; z-index: 0;
-  border-radius: 50%; filter: blur(80px); opacity: 0.38; pointer-events: none;
-  transition: background-color 0.9s var(--ease-out);
+  /* Weicher Verlauf statt Weichzeichner-Filter: kostet beim Überblenden nichts. */
+  position: absolute; left: -8%; right: -8%; top: -6%; bottom: -10%; z-index: 0;
+  opacity: 0; pointer-events: none; will-change: opacity;
+  transition: opacity 0.9s var(--ease-out);
 }
-:root[data-theme='dark'] .sx-glow { opacity: 0.2; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme]) .sx-glow { opacity: 0.2; } }
+.sx-glow.is-on { opacity: 0.42; }
+:root[data-theme='dark'] .sx-glow.is-on { opacity: 0.22; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .sx-glow.is-on { opacity: 0.22; } }
 .sx-screen {
   position: absolute; border-radius: 22px; overflow: hidden; padding: 18px;
   background-color: var(--surface-2); background-size: cover; background-position: center;
   box-shadow: 0 1px 2px rgba(20, 22, 26, 0.06), 0 24px 48px -22px rgba(20, 22, 26, 0.45);
-  will-change: transform; user-select: none; -webkit-user-select: none;
+  will-change: transform, opacity; contain: layout paint style;
+  user-select: none; -webkit-user-select: none;
 }
-.sx-screen::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--shell); opacity: var(--dim, 0); pointer-events: none; }
+/* Abdunkeln älterer Karten: eigene Ebene, nur Deckkraft – kein Neuzeichnen. */
+.sx-dim { position: absolute; inset: 0; border-radius: inherit; background: var(--shell); opacity: 0; pointer-events: none; will-change: opacity; }
 .sx-in {
   height: 100%; border-radius: 13px; overflow: hidden; background: var(--surface); color: var(--ink);
   padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;
@@ -2021,21 +2025,24 @@ code {
 .sx-screen.is-dark .sx-tag { background: rgba(255, 255, 255, 0.08); color: #cfd5e6; }
 .sx-up { color: #8fb0ff; }
 .sx-down { color: #ff9a72; }
-.sx-btn { margin-top: auto; text-align: center; font-size: 0.78rem; font-weight: 600; padding: 9px; border-radius: 10px; background: var(--ink); color: var(--shell); }
+.sx-btn { margin-top: auto; border: 0; cursor: pointer; text-align: center; font: inherit; font-size: 0.8rem; font-weight: 600; padding: 9px; border-radius: 10px; background: var(--ink); color: var(--shell); transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); }
+.sx-btn:hover { filter: brightness(1.08); }
+.sx-btn:active { transform: scale(0.97); }
 .sx-screen.is-dark .sx-btn { background: #3ddc97; color: #06130d; }
+/* Hinweis (kein Knopf) – darf nicht klickbar aussehen. */
+.sx-note { margin-top: auto; font-size: 0.78rem; line-height: 1.35; padding: 9px 11px; border-radius: 10px; background: rgba(61, 220, 151, 0.12); color: #9ff0cf; border: 1px solid rgba(61, 220, 151, 0.25); }
 .sx-stages { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; }
 .sx-stages span { display: block; height: 100%; }
 .sx-legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; font-size: 0.7rem; color: #8e95a8; }
-.sx-legend b { display: block; font-size: 0.86rem; color: #eef1f8; font-family: 'Outfit', sans-serif; }
+.sx-legend b { display: block; font-size: 0.86rem; color: #eef1f8; font-family: 'Outfit', sans-serif; white-space: nowrap; }
 .sx-ringwrap { display: flex; align-items: center; gap: 16px; }
 .sx-ringwrap svg { width: 92px; height: 92px; transform: rotate(-90deg); flex-shrink: 0; }
 .sx-ring-track, .sx-ring { fill: none; stroke-width: 7; }
 .sx-ring-track { stroke: var(--surface-2); }
 .sx-ring { stroke: var(--good); stroke-linecap: round; stroke-dasharray: 0 188.5px; transition: stroke-dasharray 1.3s var(--ease-draw) 0.25s; }
 .sx-screen[data-live] .sx-ring { stroke-dasharray: calc(var(--f) * 188.5px) 188.5px; }
-.sx-chart { width: 100%; height: 150px; display: block; }
-.sx-chart-line { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.4s var(--ease-draw) 0.3s; }
-.sx-screen[data-live] .sx-chart-line { stroke-dashoffset: 0; }
+.sx-chart { width: 100%; height: 150px; display: block; clip-path: inset(0 100% 0 0); transition: clip-path 1.4s var(--ease-draw) 0.2s; }
+.sx-screen[data-live] .sx-chart { clip-path: inset(0 0 0 0); }
 .sx-lesson { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 0.82rem; padding: 6px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); }
 .sx-lesson time { font-family: 'Outfit', sans-serif; font-weight: 600; color: #8e95a8; font-size: 0.78rem; }
 .sx-lesson b { font-weight: 600; }
