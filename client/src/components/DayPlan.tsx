@@ -48,11 +48,25 @@ export interface PlanDay {
   notes: PlanNote[]
   warnings: PlanWarning[]
 }
+export interface AiAdvice {
+  mode: 'evening' | 'morning'
+  forDate: string
+  headline: string
+  decision: string
+  wake: string | null
+  bedtime: string | null
+  reasoning: string
+  actions: string[]
+  confidence: 'hoch' | 'mittel' | 'niedrig'
+  corrected?: string
+  createdAt: string
+}
 export interface DayPlanData {
   today: string
   days: PlanDay[]
   warnings: PlanWarning[]
   ignoredFamilyEvents: number
+  ai?: { configured: boolean; morning: AiAdvice | null; evening: AiAdvice | null }
 }
 
 const hm = (ms: number) => {
@@ -62,7 +76,85 @@ const hm = (ms: number) => {
 const shortDay = (d: PlanDay) =>
   d.inDays === 0 ? 'Heute' : d.inDays === 1 ? 'Morgen' : `${d.weekday.slice(0, 2)} ${Number(d.date.slice(8))}.`
 
-export default function DayPlan({ data, loading }: { data: DayPlanData | null; loading: boolean }) {
+const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+
+/** Claudes Einschätzung für den gewählten Tag – mit Knopf zum Neu-Fragen. */
+function AiCoach({ day, ai, onReload }: { day: PlanDay; ai: NonNullable<DayPlanData['ai']>; onReload: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  // Heute: Morgenrunde vor Abendrunde; morgen: die Abendrunde von heute.
+  const advice =
+    day.inDays === 0
+      ? (ai.morning?.forDate === day.date ? ai.morning : null) ?? (ai.evening?.forDate === day.date ? ai.evening : null)
+      : day.inDays === 1 && ai.evening?.forDate === day.date
+        ? ai.evening
+        : null
+  if (day.inDays > 1) return null
+  if (!ai.configured) {
+    return <p className="dp-ai-off">Claude-Coach ist aus – dafür ANTHROPIC_API_KEY in der .env eintragen.</p>
+  }
+  const ask = async () => {
+    setBusy(true)
+    setErr(null)
+    try {
+      const res = await fetch(`/api/dayplan/ai?mode=${day.inDays === 0 ? 'morning' : 'evening'}`, { method: 'POST' })
+      if (!res.ok) setErr(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Claude gerade nicht erreichbar.')
+      onReload()
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div className="dp-ai" aria-live="polite">
+      <div className="dp-ai__top">
+        <span className="dp-ai__lab">Claude</span>
+        {advice && (
+          <span className="dp-ai__meta">
+            {advice.mode === 'evening' ? 'Abendrunde' : 'Morgenrunde'} · {timeOf(advice.createdAt)} · Sicherheit {advice.confidence}
+          </span>
+        )}
+        <button className="dr-now" onClick={ask} disabled={busy}>
+          {busy ? 'Denkt nach …' : advice ? 'Neu fragen' : 'Claude fragen'}
+        </button>
+      </div>
+      {advice ? (
+        <>
+          <p className="dp-ai__head">{advice.headline}</p>
+          {(advice.wake || advice.bedtime) && (
+            <p className="dp-ai__times">
+              {advice.wake && (
+                <span>
+                  <b>{advice.wake}</b> Wecker{advice.wake !== day.wake.time ? ` (Plan: ${day.wake.time})` : ''}
+                </span>
+              )}
+              {advice.bedtime && (
+                <span>
+                  <b>{advice.bedtime}</b> ins Bett
+                </span>
+              )}
+            </p>
+          )}
+          <p className="dp-ai__why">{advice.reasoning}</p>
+          {advice.actions.length > 0 && (
+            <ul className="dp-ai__acts">
+              {advice.actions.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          )}
+          {advice.corrected && <p className="dp-ai__why">{advice.corrected}</p>}
+        </>
+      ) : (
+        <p className="dp-ai__why">
+          {day.inDays === 0 ? 'Die Morgenrunde kommt, sobald WHOOP deine Nacht gewertet hat.' : 'Die Abendrunde kommt um 20:30 – oder jetzt per Knopf.'}
+        </p>
+      )}
+      {err && <p className="dp-ai__why is-err">{err}</p>}
+    </div>
+  )
+}
+
+export default function DayPlan({ data, loading, onReload }: { data: DayPlanData | null; loading: boolean; onReload: () => void }) {
   const [sel, setSel] = useState(0)
   const home = useRef<(() => void) | null>(null)
   const days = data?.days ?? []
@@ -140,6 +232,8 @@ export default function DayPlan({ data, loading }: { data: DayPlanData | null; l
           {day.inDays === 0 ? 'Jetzt' : 'Aufstehen'}
         </button>
       </div>
+
+      {data?.ai && <AiCoach day={day} ai={data.ai} onReload={onReload} />}
 
       <DayRuler blocks={blocks} bedtime={day.bedtime.min} isToday={day.inDays === 0} startAt={day.wake.min} homeRef={home} />
 

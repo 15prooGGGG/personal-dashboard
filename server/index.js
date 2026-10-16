@@ -34,7 +34,8 @@ import {
 import { setupNotifications, sendTestDigest, sendTestPlan, listJobs } from './notify/index.js'
 import { buildDigest } from './notify/market.js'
 import { buildPlanMessage } from './notify/plan.js'
-import { buildPlanContext } from './day-plan-context.js'
+import { buildPlanContext, runAiCoach } from './day-plan-context.js'
+import { currentAdvice } from './ai-coach.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -121,12 +122,31 @@ app.get('/api/sleep', async (req, res) => {
   }
 })
 
+// KI-Coach von Hand anstoßen (Knopf auf der Startseite). Höchstens alle
+// 5 Minuten – jeder Lauf kostet ein paar Cent.
+let lastAiRun = 0
+app.post('/api/dayplan/ai', async (req, res) => {
+  const mode = req.query.mode === 'morning' ? 'morning' : 'evening'
+  if (Date.now() - lastAiRun < 5 * 60 * 1000) return res.status(429).json({ error: 'Gerade erst gefragt – in ein paar Minuten wieder.' })
+  lastAiRun = Date.now()
+  try {
+    res.json(await runAiCoach(mode))
+  } catch (err) {
+    console.error('ai coach error:', err.message)
+    res.status(502).json({ error: err.message })
+  }
+})
+
 // Tagesplan für heute + die nächsten Tage: Aufstehen, Unterricht (mit
 // Entfall), eigene Termine, Lernblöcke, Schlafenszeit und Kollisions-Warner.
 app.get('/api/dayplan', async (req, res) => {
   try {
     const { plan, coaching } = await buildPlanContext()
-    res.json({ ...plan, coaching: coaching ? { plan: coaching.plan, training: coaching.recommendations.find((r) => r.kind === 'training') ?? null } : null })
+    res.json({
+      ...plan,
+      coaching: coaching ? { plan: coaching.plan, training: coaching.recommendations.find((r) => r.kind === 'training') ?? null } : null,
+      ai: currentAdvice(plan)
+    })
   } catch (err) {
     console.error('dayplan error:', err.message)
     res.status(500).json({ error: 'Tagesplan nicht verfügbar' })

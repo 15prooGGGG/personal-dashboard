@@ -12,6 +12,8 @@ import { buildCoaching, sleepNeed } from './whoop-coach.js'
 import { getExams } from './exams.js'
 import { lessonsOn } from './stundenplan.js'
 import { buildDayPlan, nextWake } from './day-plan.js'
+import { getTodos } from './todos-store.js'
+import { runCoach } from './ai-coach.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../data')
@@ -48,4 +50,18 @@ export async function buildPlanContext(now = new Date()) {
     ? buildCoaching({ days: whoopDays, events: cal.events ?? [], now, wake: nextWake(plan) })
     : null
   return { plan, coaching, history }
+}
+
+// KI-Coach mit frischem Kontext laufen lassen (abends: morgen, morgens: heute).
+export async function runAiCoach(mode, now = new Date()) {
+  const { plan, history } = await buildPlanContext(now)
+  const todos = (() => {
+    try {
+      const t = getTodos()
+      return Array.isArray(t) ? t : (t.todos ?? [])
+    } catch {
+      return []
+    }
+  })()
+  return runCoach({ mode, plan, history, todos, exams: getExams(now).exams ?? [], now })
 }

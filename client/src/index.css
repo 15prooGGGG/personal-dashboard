@@ -2158,6 +2158,19 @@ code {
 .dp-item button { all: unset; cursor: pointer; color: var(--ink-soft); }
 .dp-item button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .dp-item button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.dp-ai { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-card); padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+.dp-ai__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dp-ai__top .dr-now { margin-left: auto; }
+.dp-ai__top .dr-now:disabled { opacity: 0.6; cursor: progress; }
+.dp-ai__lab { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; background: var(--accent-wash); color: var(--accent-deep); }
+.dp-ai__meta { font-size: 0.78rem; color: var(--muted); }
+.dp-ai__head { margin: 2px 0 0; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; color: var(--ink); }
+.dp-ai__times { margin: 0; display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 0.88rem; }
+.dp-ai__times b { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dp-ai__why { margin: 0; font-size: 0.88rem; line-height: 1.5; color: var(--ink-soft); }
+.dp-ai__why.is-err { color: var(--down); }
+.dp-ai__acts { margin: 2px 0 0; padding-left: 18px; font-size: 0.88rem; line-height: 1.5; color: var(--ink-soft); }
+.dp-ai-off { margin: 0; font-size: 0.8rem; color: var(--muted); }
 .dr-ticks { position: absolute; left: 0; right: 0; top: 124px; height: 20px; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dr-ticks span { position: absolute; translate: -50% 0; }
 .dr-knob { position: absolute; top: 58px; width: 2px; height: 70px; background: var(--ink); translate: -1px 0; pointer-events: none; }

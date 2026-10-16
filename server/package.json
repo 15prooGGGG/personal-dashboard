@@ -10,6 +10,7 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "imapflow": "^1.4.7",

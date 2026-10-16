@@ -659,7 +659,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
         )}
       </header>
 
-      <DayPlan data={dayPlan.data} loading={dayPlan.loading} />
+      <DayPlan data={dayPlan.data} loading={dayPlan.loading} onReload={dayPlan.reload} />
 
       <Showcase title="Was heute zählt" areas={areas} jumpRef={jump} />
     </div>
