@@ -311,7 +311,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
                 dot="#ff8f6b"
                 right={
                   subs.data?.configured ? (
-                    <span className="sx-tag">{subs.data.total ? `${subs.data.total} Vertretung` : 'keine Vertretung'}</span>
+                    <span className="sx-tag">{subs.data.total ? `${subs.data.total} ${subs.data.total === 1 ? 'Vertretung' : 'Vertretungen'}` : 'keine Vertretung'}</span>
                   ) : undefined
                 }
               />
@@ -373,7 +373,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
         },
         {
           key: 'subs',
-          pos: [3, 70, 46],
+          pos: [53, 54, 43],
           content: (
             <>
               <Top
