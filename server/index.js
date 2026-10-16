@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import { fetchQuotes, fetchHistory, fetchSparkline, fetchDetails, WATCHLIST } from './stocks.js'
-import { isConfigured } from './config.js'
+import { isConfigured, config } from './config.js'
 import { fetchNews, fetchCompanyNews } from './integrations/news.js'
 import { fetchCalendarEvents } from './integrations/calendar.js'
 import { fetchImportantMails } from './integrations/mail.js'
@@ -34,8 +34,10 @@ import {
 import { setupNotifications, sendTestDigest, sendTestPlan, listJobs } from './notify/index.js'
 import { buildDigest } from './notify/market.js'
 import { buildPlanMessage } from './notify/plan.js'
-import { buildPlanContext, runAiCoach } from './day-plan-context.js'
-import { currentAdvice } from './ai-coach.js'
+import { buildPlanContext, aiJob } from './day-plan-context.js'
+import { currentAdvice, saveResult, requestRun, markRunnerSeen } from './ai-coach.js'
+import { aiMessage } from './notify/index.js'
+import { sendSignal, isConfigured as signalReady } from './integrations/signal.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -122,18 +124,36 @@ app.get('/api/sleep', async (req, res) => {
   }
 })
 
-// KI-Coach von Hand anstoßen (Knopf auf der Startseite). Höchstens alle
-// 5 Minuten – jeder Lauf kostet ein paar Cent.
-let lastAiRun = 0
-app.post('/api/dayplan/ai', async (req, res) => {
+// KI-Coach (kostenlos über das Claude-Abo, siehe server/ai-coach.js).
+// Knopf auf der Startseite: Runde anfragen – der Runner holt sie ab.
+app.post('/api/dayplan/ai', (req, res) => {
   const mode = req.query.mode === 'morning' ? 'morning' : 'evening'
-  if (Date.now() - lastAiRun < 5 * 60 * 1000) return res.status(429).json({ error: 'Gerade erst gefragt – in ein paar Minuten wieder.' })
-  lastAiRun = Date.now()
+  res.json({ queued: true, request: requestRun(mode) })
+})
+
+// Runner fragt: Ist eine Runde fällig? ?mode= erzwingt eine.
+app.get('/api/dayplan/ai/job', async (req, res) => {
   try {
-    res.json(await runAiCoach(mode))
+    markRunnerSeen()
+    const force = ['evening', 'morning'].includes(req.query.mode) ? req.query.mode : null
+    res.json(await aiJob(force))
   } catch (err) {
-    console.error('ai coach error:', err.message)
-    res.status(502).json({ error: err.message })
+    console.error('ai job error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Runner liefert Claudes Antwort ab.
+app.post('/api/dayplan/ai/result', async (req, res) => {
+  const mode = req.query.mode === 'morning' ? 'morning' : 'evening'
+  try {
+    const { plan } = await buildPlanContext()
+    const entry = saveResult({ mode, plan, advice: req.body?.advice, meta: { model: req.body?.model } })
+    if (signalReady() && config.ai.signal) sendSignal(aiMessage(entry)).catch((e) => console.error('ai signal:', e.message))
+    res.json(entry)
+  } catch (err) {
+    console.error('ai result error:', err.message)
+    res.status(400).json({ error: err.message })
   }
 })
 

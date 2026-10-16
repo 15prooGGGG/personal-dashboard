@@ -4,7 +4,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { isConfigured } from './config.js'
+import { isConfigured, config } from './config.js'
 import { fetchCalendarOccurrences } from './integrations/calendar.js'
 import { fetchSubstitutions, isConfigured as schulportalReady } from './integrations/schulportal.js'
 import { fetchWhoopHistory } from './integrations/whoop.js'
@@ -13,7 +13,7 @@ import { getExams } from './exams.js'
 import { lessonsOn } from './stundenplan.js'
 import { buildDayPlan, nextWake } from './day-plan.js'
 import { getTodos } from './todos-store.js'
-import { runCoach } from './ai-coach.js'
+import { buildJob, dueMode, loadAdvice } from './ai-coach.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../data')
@@ -52,16 +52,17 @@ export async function buildPlanContext(now = new Date()) {
   return { plan, coaching, history }
 }
 
-// KI-Coach mit frischem Kontext laufen lassen (abends: morgen, morgens: heute).
-export async function runAiCoach(mode, now = new Date()) {
+// Auftrag für den KI-Runner (scripts/ai-coach-runner.sh): fällige Runde oder
+// die erzwungene (?mode=). Ohne fällige Runde: { due: null }.
+export async function aiJob(forceMode = null, now = new Date()) {
   const { plan, history } = await buildPlanContext(now)
-  const todos = (() => {
-    try {
-      const t = getTodos()
-      return Array.isArray(t) ? t : (t.todos ?? [])
-    } catch {
-      return []
-    }
-  })()
-  return runCoach({ mode, plan, history, todos, exams: getExams(now).exams ?? [], now })
+  const mode = forceMode ?? dueMode({ now, plan, history, store: loadAdvice(), eveningTime: config.ai.eveningTime })
+  if (!mode) return { due: null }
+  let todos = []
+  try {
+    todos = getTodos()
+  } catch {
+    todos = []
+  }
+  return { due: mode, ...buildJob({ mode, plan, history, todos, exams: getExams(now).exams ?? [], now }) }
 }

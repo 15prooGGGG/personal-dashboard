@@ -85,10 +85,9 @@ export const config = {
     planWatchDays: env('NOTIFY_PLAN_WATCH_DAYS') || '0,1,2,3,4,5,6'
   },
   // KI-Coach (server/ai-coach.js): Claude entscheidet abends über den Wecker
-  // und morgens über den Tag. Ohne Key bleibt es bei den Regeln im Tagesplan.
+  // und morgens über den Tag – über Lauris Claude-Abo per Runner-Skript,
+  // nie über die bezahlte API.
   ai: {
-    apiKey: env('ANTHROPIC_API_KEY'),
-    model: env('AI_MODEL') || 'claude-opus-5-5',
     eveningTime: env('AI_EVENING_TIME') || '20:30',
     // Ergebnis zusätzlich per Signal schicken (NOTIFY_AI=off schaltet ab).
     signal: env('NOTIFY_AI').toLowerCase() !== 'off'

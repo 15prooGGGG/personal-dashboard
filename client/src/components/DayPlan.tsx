@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DayRuler from './DayRuler.tsx'
 import type { RulerBlock, RulerKind } from './DayRuler.tsx'
 
@@ -66,7 +66,7 @@ export interface DayPlanData {
   days: PlanDay[]
   warnings: PlanWarning[]
   ignoredFamilyEvents: number
-  ai?: { configured: boolean; morning: AiAdvice | null; evening: AiAdvice | null }
+  ai?: { configured: boolean; morning: AiAdvice | null; evening: AiAdvice | null; request: { mode: string; at: string } | null }
 }
 
 const hm = (ms: number) => {
@@ -89,16 +89,24 @@ function AiCoach({ day, ai, onReload }: { day: PlanDay; ai: NonNullable<DayPlanD
       : day.inDays === 1 && ai.evening?.forDate === day.date
         ? ai.evening
         : null
+  // Angefragt: Der Runner auf dem Server holt die Anfrage innerhalb von
+  // 2 Minuten ab – solange alle 20 s nachsehen.
+  const pending = Boolean(ai.request)
+  useEffect(() => {
+    if (!pending) return
+    const t = setInterval(onReload, 20_000)
+    return () => clearInterval(t)
+  }, [pending, onReload])
   if (day.inDays > 1) return null
   if (!ai.configured) {
-    return <p className="dp-ai-off">Claude-Coach ist aus – dafür ANTHROPIC_API_KEY in der .env eintragen.</p>
+    return <p className="dp-ai-off">Claude-Coach ist aus – der Runner auf dem Server (scripts/ai-coach-runner.sh) meldet sich nicht.</p>
   }
   const ask = async () => {
     setBusy(true)
     setErr(null)
     try {
       const res = await fetch(`/api/dayplan/ai?mode=${day.inDays === 0 ? 'morning' : 'evening'}`, { method: 'POST' })
-      if (!res.ok) setErr(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? 'Claude gerade nicht erreichbar.')
+      if (!res.ok) setErr('Anfrage ging nicht durch.')
       onReload()
     } finally {
       setBusy(false)
@@ -113,8 +121,8 @@ function AiCoach({ day, ai, onReload }: { day: PlanDay; ai: NonNullable<DayPlanD
             {advice.mode === 'evening' ? 'Abendrunde' : 'Morgenrunde'} · {timeOf(advice.createdAt)} · Sicherheit {advice.confidence}
           </span>
         )}
-        <button className="dr-now" onClick={ask} disabled={busy}>
-          {busy ? 'Denkt nach …' : advice ? 'Neu fragen' : 'Claude fragen'}
+        <button className="dr-now" onClick={ask} disabled={busy || pending}>
+          {pending ? 'Claude denkt nach …' : advice ? 'Neu fragen' : 'Claude fragen'}
         </button>
       </div>
       {advice ? (
@@ -149,6 +157,7 @@ function AiCoach({ day, ai, onReload }: { day: PlanDay; ai: NonNullable<DayPlanD
           {day.inDays === 0 ? 'Die Morgenrunde kommt, sobald WHOOP deine Nacht gewertet hat.' : 'Die Abendrunde kommt um 20:30 – oder jetzt per Knopf.'}
         </p>
       )}
+      {pending && <p className="dp-ai__why">Angefragt – die Antwort kommt in ein, zwei Minuten.</p>}
       {err && <p className="dp-ai__why is-err">{err}</p>}
     </div>
   )

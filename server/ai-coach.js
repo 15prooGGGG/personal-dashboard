@@ -4,38 +4,32 @@
 // verschieben lässt. Kein festes Regelwerk: Claude bekommt alle Fakten
 // (Tagesplan, WHOOP-Verlauf, Klausuren, To-dos) und wägt selbst ab.
 //
+// KOSTENLOS über Lauris Claude-Abo, NICHT über die bezahlte API:
+// Das Skript scripts/ai-coach-runner.sh läuft per Cron auf dem Server (nicht
+// im Container), fragt hier GET /api/dayplan/ai/job, ob eine Runde fällig ist,
+// ruft dann `claude -p` mit Lauris claude.ai-Anmeldung auf und schickt die
+// Antwort an POST /api/dayplan/ai/result. Es gibt bewusst keinen API-Key-Weg.
+//
 // Arbeitsteilung:
 //   - Fakten rechnet der Tagesplan (day-plan.js) – Uhrzeiten, Entfall,
-//     Kollisionen. Die sind nachprüfbar und bleiben regelbasiert.
-//   - Die Abwägung macht Claude. Die Regel-Empfehlung wird mitgeschickt,
-//     Claude darf ihr widersprechen.
-//   - Harte Grenze: Claude kann keine Weckzeit nach dem spätesten möglichen
-//     Aufstehen vor der Schule setzen – das wird serverseitig geprüft.
+//     Kollisionen. Die Regel-Empfehlung wird nur als Vorschlag mitgeschickt.
+//   - Harte Grenze: keine Weckzeit nach dem spätesten möglichen Aufstehen vor
+//     der Schule – das wird hier beim Speichern geprüft.
 //
-// Zwei Läufe am Tag:
-//   abends  (AI_EVENING_TIME, Standard 20:30): Wecker für morgen entscheiden.
-//           Die Recovery von morgen kennt noch niemand – Grundlage sind
-//           Schlafdefizit, Verlauf und was morgen ansteht.
-//   morgens (sobald WHOOP die Nacht gewertet hat): Tag mit echter Recovery
-//           justieren – Training, Lernen, Pausen.
-//
-// Ergebnis liegt in data/ai-coach.json, die Startseite zeigt es an.
+// Zwei Runden am Tag:
+//   abends  (AI_EVENING_TIME, Standard 20:30): Wecker für morgen.
+//   morgens (sobald WHOOP die Nacht gewertet hat, 05–12 Uhr): Tag justieren.
+// Dazu jederzeit per Knopf auf der Startseite (Anfrage in der Warteschlange,
+// der Runner holt sie innerhalb von 2 Minuten ab).
 // ===========================================================================
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import Anthropic from '@anthropic-ai/sdk'
-import { config } from './config.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../data')
 const FILE = path.join(DATA_DIR, 'ai-coach.json')
 const TZ = 'Europe/Berlin'
-
-export const isConfigured = () => Boolean(config.ai.apiKey)
-
-let client = null
-const getClient = () => (client ??= new Anthropic({ apiKey: config.ai.apiKey }))
 
 // ---- Ablage --------------------------------------------------------------------
 export function loadAdvice() {
@@ -93,6 +87,12 @@ function daySummary(day) {
   }
 }
 
+/** Zieltag: abends der nächste Morgen – nach Mitternacht (bis 05:00) also heute. */
+export function targetDay(mode, plan) {
+  if (mode === 'morning') return plan.days[0]
+  return plan.nowMin < 5 * 60 ? plan.days[0] : plan.days[1]
+}
+
 /** Spätestmögliche Weckzeit (Minuten) – vor der Schule ist nichts verhandelbar. */
 function latestWake(day, morning) {
   if (!day?.school) return null
@@ -101,15 +101,13 @@ function latestWake(day, morning) {
 }
 
 export function buildPrompt({ mode, plan, history, todos = [], exams = [], now = new Date() }) {
-  // Abends geht es um morgen, morgens um heute (nach Mitternacht ist „morgen“
-  // schon heute – der Tagesplan zählt Tage ab dem Kalenderdatum).
-  const target = mode === 'evening' ? plan.days[1] : plan.days[0]
+  const target = targetDay(mode, plan)
   const latest = latestWake(target, plan.morning)
   const facts = {
     jetzt: berlin(now.toISOString()),
     lauf: mode === 'evening' ? 'Abend: Wecker für morgen festlegen' : 'Morgen: Tag mit der echten Recovery justieren',
     zieltag: daySummary(target),
-    danach: plan.days.slice(mode === 'evening' ? 2 : 1, mode === 'evening' ? 5 : 4).map(daySummary),
+    danach: plan.days.slice(target.inDays + 1, target.inDays + 4).map(daySummary),
     spätesteWeckzeit: latest != null ? `${String(Math.floor(latest / 60)).padStart(2, '0')}:${String(latest % 60).padStart(2, '0')}` : 'keine (kein Unterricht)',
     morgenroutine: `${plan.morning.routineMin} min Routine + ${plan.morning.commuteMin} min Schulweg`,
     whoopLetzteNächte: nightsSummary(history?.days),
@@ -152,47 +150,76 @@ const toMin = (hhmm) => {
   return m ? Number(m[1]) * 60 + Number(m[2]) : null
 }
 
-/** Claude fragen. Liefert den gespeicherten Eintrag zurück. */
-export async function runCoach({ mode, plan, history, todos, exams, now = new Date(), anthropic = null }) {
-  if (!anthropic && !isConfigured()) throw new Error('ANTHROPIC_API_KEY fehlt')
-  const { facts, latest } = buildPrompt({ mode, plan, history, todos, exams, now })
+const toHm = (min) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`
+const localNow = (now) => {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now)
+  const g = (t) => p.find((x) => x.type === t)?.value
+  return { date: `${g('year')}-${g('month')}-${g('day')}`, minutes: Number(g('hour')) * 60 + Number(g('minute')) }
+}
 
-  const response = await (anthropic ?? getClient()).beta.messages.create({
-    model: config.ai.model,
-    max_tokens: 16000,
-    // Bei einer Ablehnung durch die Sicherheitsfilter springt serverseitig
-    // automatisch ein passendes Ersatzmodell ein.
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA } },
-    system: SYSTEM,
-    messages: [{ role: 'user', content: `Fakten (JSON):\n${JSON.stringify(facts, null, 1)}` }]
-  })
-
-  if (response.stop_reason === 'refusal') throw new Error('Claude hat die Anfrage abgelehnt')
-  if (response.stop_reason === 'max_tokens') throw new Error('Antwort abgeschnitten')
-  const text = response.content.find((b) => b.type === 'text')?.text
-  const advice = JSON.parse(text)
-  if (!advice.wake) advice.wake = null
-
-  // Harte Grenze nachprüfen: nie nach dem spätesten Aufstehen vor der Schule.
-  const wakeMin = toMin(advice.wake)
-  if (latest != null && wakeMin != null && wakeMin > latest) {
-    advice.wake = facts.spätesteWeckzeit
-    advice.corrected = `Weckzeit auf ${facts.spätesteWeckzeit} korrigiert – sonst wäre die Schule nicht zu schaffen.`
+/** Welche Runde ist jetzt fällig? Handanfrage geht vor. */
+export function dueMode({ now = new Date(), plan, history, store = loadAdvice(), eveningTime = '20:30' }) {
+  if (store.request?.mode) return store.request.mode
+  const here = localNow(now)
+  const evening = toMin(eveningTime)
+  const lateNight = here.minutes < 5 * 60
+  if ((here.minutes >= evening || lateNight) && store.evening?.forDate !== targetDay('evening', plan)?.date) return 'evening'
+  if (here.minutes >= 5 * 60 && here.minutes <= 12 * 60 && store.morning?.forDate !== here.date) {
+    // Erst wenn WHOOP die Nacht gewertet hat (Recovery da, heute aufgewacht).
+    const d = history?.days?.[0]
+    const woke = d?.sleep?.wake && localNow(new Date(d.sleep.wake)).date === here.date
+    if (d?.recovery && woke) return 'morning'
   }
+  return null
+}
 
-  const target = mode === 'evening' ? plan.days[1] : plan.days[0]
-  const entry = {
-    ...advice,
+/** Auftrag für den Runner: System-Prompt, Fakten, Schema. */
+export function buildJob({ mode, plan, history, todos, exams, now = new Date() }) {
+  const { facts } = buildPrompt({ mode, plan, history, todos, exams, now })
+  return {
     mode,
-    forDate: target?.date ?? null,
-    createdAt: now.toISOString(),
-    model: response.model,
-    usage: { input: response.usage.input_tokens, output: response.usage.output_tokens }
+    system: SYSTEM,
+    prompt: `Fakten (JSON):\n${JSON.stringify(facts, null, 1)}\n\nEntscheide jetzt und antworte im vorgegebenen JSON-Format.`,
+    schema: SCHEMA
   }
-  saveAdvice({ [mode]: entry })
-  return entry
+}
+
+/** Antwort des Runners prüfen und ablegen. */
+export function saveResult({ mode, plan, advice, meta = {}, now = new Date() }) {
+  for (const k of ['headline', 'decision', 'reasoning', 'confidence']) {
+    if (typeof advice?.[k] !== 'string' || !advice[k]) throw new Error(`Antwort ohne ${k}`)
+  }
+  const target = targetDay(mode, plan)
+  const latest = latestWake(target, plan.morning)
+  const entry = {
+    headline: advice.headline,
+    decision: advice.decision,
+    wake: advice.wake || null,
+    bedtime: advice.bedtime || null,
+    reasoning: advice.reasoning,
+    actions: Array.isArray(advice.actions) ? advice.actions.slice(0, 5).map(String) : [],
+    confidence: advice.confidence
+  }
+  // Harte Grenze: nie nach dem spätesten Aufstehen vor der Schule.
+  const wakeMin = toMin(entry.wake)
+  if (latest != null && wakeMin != null && wakeMin > latest) {
+    entry.wake = toHm(latest)
+    entry.corrected = `Weckzeit auf ${toHm(latest)} korrigiert – sonst wäre die Schule nicht zu schaffen.`
+  }
+  const full = { ...entry, mode, forDate: target?.date ?? null, createdAt: now.toISOString(), model: meta.model ?? null }
+  const store = loadAdvice()
+  saveAdvice({ [mode]: full, request: store.request?.mode === mode ? null : store.request })
+  return full
+}
+
+/** Knopf auf der Startseite: Runde anfragen, der Runner holt sie ab. */
+export function requestRun(mode, now = new Date()) {
+  return saveAdvice({ request: { mode, at: now.toISOString() } }).request
+}
+
+/** Runner meldet sich (für „ist eingerichtet?“ auf der Startseite). */
+export function markRunnerSeen(now = new Date()) {
+  saveAdvice({ runnerSeenAt: now.toISOString() })
 }
 
 /** Die für jetzt passende Einschätzung: morgens die Morgen-, sonst die Abendrunde. */
@@ -202,5 +229,7 @@ export function currentAdvice(plan) {
   const tomorrow = plan?.days?.[1]?.date
   const morning = all.morning?.forDate === today ? all.morning : null
   const evening = all.evening && [today, tomorrow].includes(all.evening.forDate) ? all.evening : null
-  return { configured: isConfigured(), morning, evening }
+  // Eingerichtet = der Runner hat sich in den letzten 10 Minuten gemeldet.
+  const configured = Boolean(all.runnerSeenAt && Date.now() - Date.parse(all.runnerSeenAt) < 10 * 60 * 1000)
+  return { configured, morning, evening, request: all.request ?? null }
 }
