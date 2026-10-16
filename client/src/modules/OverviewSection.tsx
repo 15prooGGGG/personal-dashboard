@@ -373,7 +373,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
         },
         {
           key: 'subs',
-          pos: [53, 54, 43],
+          pos: [53, 63, 43],
           content: (
             <>
               <Top
