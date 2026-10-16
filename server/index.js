@@ -34,6 +34,7 @@ import {
 import { setupNotifications, sendTestDigest, sendTestPlan, listJobs } from './notify/index.js'
 import { buildDigest } from './notify/market.js'
 import { buildPlanMessage } from './notify/plan.js'
+import { buildPlanContext } from './day-plan-context.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -111,17 +112,24 @@ app.get('/api/whoop', async (req, res) => {
 // Schlaf-Tab: 30-Tage-Verlauf + Empfehlungen (Kalender fließt für Prüfungen ein).
 app.get('/api/sleep', async (req, res) => {
   try {
-    const history = await fetchWhoopHistory()
+    const { history, coaching } = await buildPlanContext()
     if (!history.connected) return res.json(history)
-    const events = isConfigured.calendar
-      ? await fetchCalendarEvents()
-          .then((r) => r.events ?? r)
-          .catch(() => [])
-      : []
-    res.json({ ...history, coaching: buildCoaching({ days: history.days, events }) })
+    res.json({ ...history, coaching })
   } catch (err) {
     console.error('sleep error:', err.message)
     res.status(502).json({ error: 'WHOOP nicht erreichbar' })
+  }
+})
+
+// Tagesplan für heute + die nächsten Tage: Aufstehen, Unterricht (mit
+// Entfall), eigene Termine, Lernblöcke, Schlafenszeit und Kollisions-Warner.
+app.get('/api/dayplan', async (req, res) => {
+  try {
+    const { plan, coaching } = await buildPlanContext()
+    res.json({ ...plan, coaching: coaching ? { plan: coaching.plan, training: coaching.recommendations.find((r) => r.kind === 'training') ?? null } : null })
+  } catch (err) {
+    console.error('dayplan error:', err.message)
+    res.status(500).json({ error: 'Tagesplan nicht verfügbar' })
   }
 })
 

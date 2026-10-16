@@ -129,3 +129,16 @@ export function getStundenplan(now = new Date()) {
     generatedAt: plan.generatedAt
   }
 }
+
+// Stunden für ein beliebiges Datum (YYYY-MM-DD) – für den Tagesplan.
+// null = kein Schultag laut Plan (Wochenende) oder Plan fehlt.
+export function lessonsOn(dateStr) {
+  const plan = load()
+  if (!plan) return null
+  const d = new Date(`${dateStr}T12:00:00`)
+  const name = DAY_NAMES[d.getDay()]
+  const week = weekFor(d)
+  if (!week || !plan.days.includes(name)) return null
+  const lessons = lessonsFor(plan, week, name)
+  return lessons.length ? { day: name, week, lessons } : null
+}

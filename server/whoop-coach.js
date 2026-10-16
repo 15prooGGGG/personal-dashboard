@@ -73,8 +73,11 @@ const EXAM = /klausur|prüfung|test\b|klassenarbeit|abitur|abi\b|theorieprüfung
  * @param {Array}  input.days     WHOOP-Zyklen, neueste zuerst (fetchWhoopHistory().days)
  * @param {Array}  [input.events] Kalendertermine ({ title, start, allDay })
  * @param {Date}   [input.now]
+ * @param {object} [input.wake]   Weckzeit für morgen aus dem Tagesplan
+ *                                ({ minutes, kind }) – an Schultagen aus dem
+ *                                Stundenplan statt aus dem bisherigen Rhythmus.
  */
-export function buildCoaching({ days, events = [], now = new Date() }) {
+export function buildCoaching({ days, events = [], now = new Date(), wake = null }) {
   const today = days[0]
   const yesterday = days[1] ?? null
   if (!today) return { focus: null, recommendations: [], plan: null }
@@ -111,6 +114,7 @@ export function buildCoaching({ days, events = [], now = new Date() }) {
     wakeTarget = Math.min(wakeTarget ?? Infinity, schoolWake + 120)
   }
   wakeTarget ??= median(nights.slice(0, 8).map(wakeMin))
+  if (wake?.minutes != null) wakeTarget = wake.minutes
 
   // Schlafbedarf: WHOOP-Grundbedarf + das, was letzte Nacht zum Bedarf fehlte
   // (höchstens 1 h auf einmal nachholen – realistischer als alles in einer Nacht).
@@ -124,12 +128,13 @@ export function buildCoaching({ days, events = [], now = new Date() }) {
     const wakeRel = wakeTarget + 24 * 60 - 18 * 60
     let bedRel = wakeRel - targetSleep / eff / 60000
     // Nicht mehr als 1 h von der gewohnten Schulnacht-Zeit abweichen – eine
-    // Empfehlung, die man nicht einhalten kann, hilft nicht.
-    if (schoolBed != null) bedRel = Math.min(Math.max(bedRel, schoolBed - 60), schoolBed + 60)
+    // Empfehlung, die man nicht einhalten kann, hilft nicht. Steht die
+    // Weckzeit aber fest (Schule), zählt der Bedarf: dann ehrlich früher.
+    if (schoolBed != null && wake?.minutes == null) bedRel = Math.min(Math.max(bedRel, schoolBed - 60), schoolBed + 60)
     const expectedSleep = (wakeRel - bedRel) * 60000 * eff
     plan = {
       wake: clock(wakeTarget),
-      wakeKind: weekendTomorrow ? 'Wochenende' : 'Schultag',
+      wakeKind: wake?.kind ?? (weekendTomorrow ? 'Wochenende' : 'Schultag'),
       sleepTargetMs: Math.round(targetSleep),
       expectedSleepMs: Math.round(expectedSleep),
       bedtime: clock(fromBedMinutes(bedRel)),
@@ -281,6 +286,29 @@ export function buildCoaching({ days, events = [], now = new Date() }) {
   }
 
   return { focus: buildFocus({ today, yesterday, last, prev, rec, prevRec, base, plan }), recommendations: recs, plan, baseline: base }
+}
+
+// Schlafbedarf für den Tagesplan – dieselbe Rechnung wie im Plan oben:
+// WHOOP-Grundbedarf, für heute Nacht plus höchstens 1 h vom Defizit.
+export function sleepNeed(days) {
+  const last = days?.[0]?.sleep
+  if (!last?.need) return null
+  const needLast = last.need.baselineMs + last.need.debtMs + last.need.strainMs + last.need.napMs
+  const deficitMs = Math.max(0, needLast - last.durationMs)
+  const eff = avg(days.filter((d) => d.sleep).slice(0, 7).map((d) => d.sleep.efficiency)) ?? 90
+  return {
+    baselineMs: last.need.baselineMs,
+    tonightMs: last.need.baselineMs + Math.min(deficitMs, H),
+    deficitMs,
+    efficiency: eff / 100,
+    recovery: days[0].recovery?.score ?? null,
+    // Gewohnte Einschlafzeit der letzten 5 Nächte, in Minuten ab Mitternacht
+    // des Vortags (02:00 = 1560) – für den Umstellungs-Hinweis im Tagesplan.
+    habitualBedMin: (() => {
+      const m = median(days.filter((d) => d.sleep).slice(0, 5).map((d) => bedMinutes(d.sleep.bedtime)))
+      return m == null ? null : fromBedMinutes(m)
+    })()
+  }
 }
 
 // ---- Der eine Satz: heute besser als gestern ---------------------------------

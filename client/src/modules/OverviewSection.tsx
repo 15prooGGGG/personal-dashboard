@@ -2,8 +2,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import Showcase from '../components/Showcase.tsx'
 import type { ShowcaseArea } from '../components/Showcase.tsx'
-import DayRuler from '../components/DayRuler.tsx'
-import type { RulerBlock } from '../components/DayRuler.tsx'
+import DayPlan from '../components/DayPlan.tsx'
+import type { DayPlanData } from '../components/DayPlan.tsx'
 import { useApi } from '../lib/useApi.ts'
 import { useHistory } from '../lib/useStocks.ts'
 import { formatCurrency, formatPercent } from '../lib/format.ts'
@@ -13,7 +13,8 @@ import { DEFAULT_SYMBOL } from './MarketsSection.tsx'
 
 // ===========================================================================
 // Startseite: ruhiger Kopf mit einem Satz über den Tag, darunter die Bühne
-// „Was heute zählt“ (Scroll-Stapel, siehe Showcase.tsx) und der Tagesregler.
+// der Tagesplan (siehe DayPlan.tsx) und die Bühne „Was heute zählt“
+// (Scroll-Stapel, siehe Showcase.tsx).
 // ===========================================================================
 
 interface WhoopData {
@@ -114,6 +115,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   const whoop = useApi<WhoopData>('/api/whoop', 10 * 60 * 1000)
   const sleep = useApi<SleepData>('/api/sleep', 15 * 60 * 1000)
   const plan = useApi<PlanData>('/api/stundenplan', 10 * 60 * 1000)
+  const dayPlan = useApi<DayPlanData>('/api/dayplan', 10 * 60 * 1000)
   const subs = useApi<SubstitutionPlan>('/api/substitutions', 10 * 60 * 1000)
   const cal = useApi<{ configured: boolean; events: CalendarEvent[] }>('/api/calendar', 10 * 60 * 1000)
   const mail = useApi<{ configured: boolean; mails: MailItem[] }>('/api/mail', 5 * 60 * 1000)
@@ -582,38 +584,6 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
     }
   ]
 
-  // ---- Tagesregler -------------------------------------------------------
-  const todayBlocks = plan.data?.day ? mergeLessons(plan.data.today) : []
-  const bedtime = coachPlan?.bedtime ?? null
-  // Benannte Pausen aus dem Stundenplan (z. B. Mittagspause 13:00–14:00)
-  const breakBlocks: RulerBlock[] = plan.data?.day
-    ? plan.data.today
-        .filter((l) => l.type === 'break' && l.subject && l.start && l.end)
-        .map((l) => ({ start: l.start!, end: l.end!, name: l.subject!, kind: 'break' as const, info: `${l.start}–${l.end}` }))
-    : []
-  const rulerBlocks: RulerBlock[] = [
-    ...breakBlocks,
-    ...todayBlocks.map((b) => ({
-      start: b.start,
-      end: b.end,
-      name: b.subject,
-      kind: 'school' as const,
-      info: `${b.room ? `${b.room} · ` : ''}${b.from === b.to ? `${b.from}.` : `${b.from}.–${b.to}.`} Stunde`
-    }))
-  ]
-  const freeFrom = todayBlocks.length ? todayBlocks[todayBlocks.length - 1].end : '06:00'
-  const bedOk = bedtime && (bedtime >= '18:00' || bedtime <= '03:00')
-  rulerBlocks.push({
-    start: freeFrom,
-    end: bedOk ? bedtime! : '03:00',
-    name: 'Frei',
-    kind: 'free',
-    info: training ? training.title : 'Freie Zeit'
-  })
-  if (bedOk && bedtime !== '03:00') {
-    rulerBlocks.push({ start: bedtime!, end: '03:00', name: 'Schlaf', kind: 'sleep', info: `Ziel ${coachPlan ? hm(coachPlan.sleepTargetMs) : ''}` })
-  }
-
   // ---- Kopf: ein Satz über den Tag ---------------------------------------
   const words = `${greeting(now)}, Lauri.`.split(' ')
   const examSoon = exams[0]
@@ -689,13 +659,9 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
         )}
       </header>
 
-      <Showcase title="Was heute zählt" areas={areas} jumpRef={jump} />
+      <DayPlan data={dayPlan.data} loading={dayPlan.loading} />
 
-      <DayRuler
-        title={`Dein ${now.toLocaleDateString('de-DE', { weekday: 'long' })} zum Ziehen`}
-        blocks={rulerBlocks}
-        bedtime={bedOk ? bedtime : null}
-      />
+      <Showcase title="Was heute zählt" areas={areas} jumpRef={jump} />
     </div>
   )
 }

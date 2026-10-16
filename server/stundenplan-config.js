@@ -28,3 +28,14 @@ export const PERIOD_TIMES = {
 //    Auf null setzen, wenn unbekannt – dann zeigt das Dashboard beide Wochen
 //    ohne automatische Auswahl.
 export const WEEK_REFERENCE = { date: '2026-09-14', week: 'B' }
+
+// 3) Ferien (erster und letzter freier Tag). Der Stundenplan kennt keine
+//    Ferien; zusätzlich erkennt der Tagesplan ganztägige Kalendertermine wie
+//    „Herbstferien“ oder „Unterrichtsfrei“.
+export const SCHOOL_BREAKS = [
+  { name: 'Herbstferien', from: '2026-10-05', to: '2026-10-18' }
+]
+
+// 4) Morgen an Schultagen (Lauri, 16.10.2026): 70 min vor der ersten Stunde
+//    aufstehen – Morgenroutine + Schulweg. Bei Entfall rutscht beides mit.
+export const MORNING = { routineMin: 45, commuteMin: 25 }

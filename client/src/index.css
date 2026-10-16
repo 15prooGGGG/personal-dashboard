@@ -2118,6 +2118,46 @@ code {
 .dr-blk.is-free { background: color-mix(in srgb, var(--good) 12%, var(--surface)); color: color-mix(in srgb, var(--good) 70%, var(--ink)); }
 .dr-blk.is-sleep { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent-deep); }
 .dr-blk.is-hit { transform: scaleY(1.12); filter: saturate(1.4); }
+.dr-blk.is-morning { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); color: color-mix(in srgb, var(--amber) 70%, var(--ink)); }
+.dr-blk.is-commute { background: var(--surface-2); color: var(--muted); }
+.dr-blk.is-cancelled { z-index: 1; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--warm) 12%, transparent) 0 4px, transparent 4px 8px); color: var(--muted); text-decoration: line-through; border: 1px dashed color-mix(in srgb, var(--warm) 40%, transparent); }
+.dr-blk.is-gym { z-index: 2; background: color-mix(in srgb, var(--good) 26%, var(--surface)); color: color-mix(in srgb, var(--good) 60%, var(--ink)); }
+.dr-blk.is-event { z-index: 2; background: var(--accent-wash); color: var(--accent-deep); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+.dr-blk.is-work { z-index: 2; background: color-mix(in srgb, var(--butter) 40%, var(--surface)); color: var(--ink); }
+.dr-blk.is-study { z-index: 2; background: color-mix(in srgb, var(--accent) 24%, var(--surface)); color: var(--accent-deep); }
+.dr-blk.is-clash { box-shadow: 0 0 0 2px var(--down); }
+
+/* Tagesplan (über der Bühne) */
+.dp { display: flex; flex-direction: column; gap: 14px; }
+.dp-head { display: flex; justify-content: space-between; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.dp-days { display: flex; flex-wrap: wrap; gap: 6px; }
+.dp-day {
+  position: relative; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 999px; padding: 6px 13px; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.dp-day:active { transform: scale(0.97); }
+.dp-day.is-off { color: var(--muted); }
+.dp-day.is-on { background: var(--ink); color: var(--shell); border-color: var(--ink); }
+.dp-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 2px var(--shell); }
+.dp-dot.is-soon { background: var(--down); }
+.dp-dot.is-ahead { background: var(--amber); }
+.dp-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; color: var(--muted); font-size: 0.9rem; }
+.dp-fact b { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.15rem; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 2px; }
+.dp-facts .dr-now { margin-left: auto; }
+.dp .dr-ruler { margin-top: 4px; }
+.dp-list { list-style: none; margin: -14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dp-item { display: flex; gap: 10px; align-items: baseline; font-size: 0.88rem; line-height: 1.45; color: var(--ink-soft); }
+.dp-item > i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); translate: 0 -1px; }
+.dp-item b { color: var(--ink); font-weight: 600; }
+.dp-item.is-warn > i { background: var(--down); }
+.dp-item.is-ahead > i { background: var(--amber); }
+.dp-item.is-sleep-in > i, .dp-item.is-shift > i { background: var(--accent-deep); }
+.dp-item.is-early-end > i, .dp-item.is-gap > i { background: var(--good); }
+.dp-item button { all: unset; cursor: pointer; color: var(--ink-soft); }
+.dp-item button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.dp-item button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .dr-ticks { position: absolute; left: 0; right: 0; top: 124px; height: 20px; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dr-ticks span { position: absolute; translate: -50% 0; }
 .dr-knob { position: absolute; top: 58px; width: 2px; height: 70px; background: var(--ink); translate: -1px 0; pointer-events: none; }

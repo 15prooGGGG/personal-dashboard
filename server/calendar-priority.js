@@ -46,3 +46,12 @@ export function byPriorityThenUrgency(a, b) {
   if (a.priority !== b.priority) return a.priority - b.priority
   return new Date(a.start) - new Date(b.start)
 }
+
+// Welche Termine zählen für Lauris Tagesplan und die Kollisions-Warner?
+// Alle eigenen Kalender – der Familienkalender nur, wenn „Lauri“ im Titel
+// steht. Dort stehen sonst Termine anderer (Fußpflege, Hautarzt, Fußball),
+// die Lauris Tag nicht verplanen dürfen. (Von Lauri bestätigt, 16.10.2026.)
+export function countsForPlanning(ev) {
+  if (/famili/i.test(ev.calendar || '')) return /\blauri\b/i.test(ev.title || '')
+  return true
+}
