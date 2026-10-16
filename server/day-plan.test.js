@@ -1,13 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildDayPlan, nextWake, eventKind } from './day-plan.js'
+import { buildDayPlan, nextWake, eventKind, entryMatchesLesson } from './day-plan.js'
 import { countsForPlanning } from './calendar-priority.js'
 
 const H = 3600000
 // Montag 19.10.2026, 06:00 Berlin (= 04:00 UTC)
 const MONDAY_6 = new Date('2026-10-19T04:00:00Z')
 
-const L = (period, start, end, subject, type = 'lesson') => ({ period, start, end, type, subject, room: 'G3' })
+const L = (period, start, end, subject, type = 'lesson', course = subject.slice(0, 2).toLowerCase() + '06', teacher = 'KER') => ({ period, start, end, type, subject, room: 'G3', course, teacher })
 const MONDAY = [
   L(1, '07:40', '08:25', 'Religion'),
   L(2, '08:30', '09:15', 'Religion'),
@@ -33,7 +33,7 @@ const sleep = (recovery = 70, deficitMs = 0) => ({
 })
 const ev = (title, start, end, calendar = 'Privat') => ({ title, start, end, calendar, allDay: false })
 const entfall = (date, ...lessons) => ({
-  days: [{ date, infos: [], entries: lessons.map((l) => ({ lesson: String(l), kind: 'Entfall', subject: 'x' })) }]
+  days: [{ date, infos: [], entries: lessons.map((l) => ({ lesson: String(l), kind: 'Entfall', teacher: 'Köcher (KER)', subject: 'x' })) }]
 })
 
 test('Schultag: Aufstehen 70 min vor der 1. Stunde, Schlafenszeit aus dem WHOOP-Bedarf', () => {
@@ -194,4 +194,23 @@ test('Klausur aus dem Klausurplan nicht doppelt als Kalender-Chip', () => {
     exams: [{ date: '2026-10-19', subject: 'Mathematik', kind: 'LK' }]
   })
   assert.deepEqual(p.days[0].chips, [{ kind: 'exam', title: 'Klausur Mathematik (LK)' }])
+})
+
+test('Entfall gilt nur für eigene Kurse (Lehrerkürzel oder Kurs)', () => {
+  const deutsch = { period: 8, type: 'lesson', subject: 'Deutsch', course: 'd06', teacher: 'KER' }
+  // Echter Fall 19.10.2026: Stufen-Eintrag für d05 bei BGT – nicht Lauris Kurs
+  assert.equal(entryMatchesLesson({ teacher: 'Baumgärtner (BGT)', subject: 'd05', kind: 'Entfall' }, deutsch), false)
+  assert.equal(entryMatchesLesson({ teacher: 'Köcher (KER)', subject: 'd06', kind: 'Entfall' }, deutsch), true)
+  assert.equal(entryMatchesLesson({ teacher: '', subject: 'D06', kind: 'Entfall' }, deutsch), true)
+  assert.equal(entryMatchesLesson({ kind: 'Entfall' }, deutsch), true)
+  assert.equal(entryMatchesLesson({ teacher: 'Muster (COU)' }, { ...deutsch, teacher: 'COU/MUP' }), true)
+  const p = buildDayPlan({
+    now: MONDAY_6,
+    lessonsOn,
+    sleep: sleep(),
+    days: 1,
+    substitutions: { days: [{ date: '19.10.2026', infos: [], entries: [8, 9].map((l) => ({ lesson: String(l), kind: 'Entfall', teacher: 'Baumgärtner (BGT)', subject: 'd05' })) }] }
+  })
+  assert.equal(p.days[0].school.end, '15:30')
+  assert.ok(!p.days[0].blocks.some((b) => b.kind === 'cancelled'))
 })

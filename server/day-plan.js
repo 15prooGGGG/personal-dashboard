@@ -92,7 +92,20 @@ export function eventKind(ev) {
 }
 
 // Vertretungsplan: welche Stunden entfallen an diesem Tag?
+// Das Portal zeigt die ganze Stufe („12 Q“) – ein Eintrag gilt nur, wenn
+// Lehrerkürzel oder Kurs zu Lauris Stunde passen (z. B. Entfall „d05/BGT“
+// betrifft ihn nicht, er hat Deutsch d06 bei KER). Ohne beides: zählt.
 const CANCEL = /entfall|ausfall|fällt|eva\b|selbststudium|freisetzung/i
+const norm = (v) => String(v ?? '').trim().toLowerCase()
+export function entryMatchesLesson(entry, lesson) {
+  const teachers = [...String(entry.teacher ?? '').matchAll(/\(([^)]+)\)/g)].map((m) => norm(m[1]))
+  if (!teachers.length && entry.teacher) teachers.push(norm(entry.teacher))
+  const subjects = [entry.subject, entry.subjectOld].map(norm).filter(Boolean)
+  if (!teachers.length && !subjects.length) return true
+  const own = norm(lesson.teacher).split('/').filter(Boolean)
+  if (teachers.some((t) => own.includes(t))) return true
+  return subjects.includes(norm(lesson.course))
+}
 function cancelledPeriods(subDay, lessons) {
   const out = new Map() // period → Grund
   if (!subDay) return out
@@ -101,7 +114,10 @@ function cancelledPeriods(subDay, lessons) {
     // „8 - 9“ oder „8“
     const nums = String(e.lesson ?? '').match(/\d+/g)?.map(Number) ?? []
     const [a, b = a] = nums
-    for (let p = a; p <= b; p++) out.set(p, e.kind)
+    for (let p = a; p <= b; p++) {
+      const lesson = lessons.find((l) => l.period === p && l.type === 'lesson')
+      if (lesson && entryMatchesLesson(e, lesson)) out.set(p, e.kind)
+    }
   }
   // Tagesinfo „Unterrichtsfrei“ – mit Zahl: ab dieser Stunde frei.
   for (const info of subDay.infos ?? []) {
