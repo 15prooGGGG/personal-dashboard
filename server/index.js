@@ -11,6 +11,7 @@ import { getTodos, addTodo, setDone, deleteTodo } from './todos-store.js'
 import { getVault } from './integrations/obsidian.js'
 import { fetchWhoop, fetchWhoopHistory, authLink, completeLink, isConfigured as whoopReady } from './integrations/whoop.js'
 import { buildCoaching } from './whoop-coach.js'
+import { getExams } from './exams.js'
 import { getStundenplan } from './stundenplan.js'
 import { PDF_PATH, isConfigured as loesungsbuchReady, search as searchLoesungsbuch } from './loesungsbuch.js'
 // fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
@@ -136,6 +137,16 @@ app.post('/api/whoop/link', async (req, res) => {
   } catch (err) {
     console.error('whoop link error:', err.message)
     res.status(400).json({ error: err.message })
+  }
+})
+
+// Klausurtermine aus dem Klausurplan im Second Brain (alle, nicht nur 14 Tage).
+app.get('/api/exams', (req, res) => {
+  try {
+    res.json(getExams())
+  } catch (err) {
+    console.error('exams error:', err.message)
+    res.status(500).json({ error: 'Klausurplan konnte nicht gelesen werden' })
   }
 })
 

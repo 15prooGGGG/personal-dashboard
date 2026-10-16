@@ -118,6 +118,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   const cal = useApi<{ configured: boolean; events: CalendarEvent[] }>('/api/calendar', 10 * 60 * 1000)
   const mail = useApi<{ configured: boolean; mails: MailItem[] }>('/api/mail', 5 * 60 * 1000)
   const vault = useApi<VaultData>('/api/vault', 10 * 60 * 1000)
+  const examPlan = useApi<{ configured: boolean; exams: { date: string; subject: string; kind: string; note: string | null }[] }>('/api/exams', 30 * 60 * 1000)
   const { history } = useHistory(DEFAULT_SYMBOL, '1mo', '1d')
 
   const [now, setNow] = useState(() => new Date())
@@ -139,7 +140,17 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   const nextBlock = up && up.inDays === 0 ? upBlocks.find((b) => b.start > nowHm) ?? upBlocks[0] : upBlocks[0]
   const upLabel = !up ? '' : up.inDays === 0 ? 'heute' : up.inDays === 1 ? 'morgen' : `am ${up.day}`
   const events = cal.data?.events ?? []
-  const exams = events.filter(isExam).filter((e) => daysUntil(e.start) >= 0).slice(0, 2)
+  // Klausuren: aus dem Klausurplan im Second Brain (alle Termine); falls der
+  // fehlt, aus dem Kalender (der reicht nur 14 Tage weit).
+  const exams = examPlan.data?.configured
+    ? examPlan.data.exams.map((e) => ({
+        id: `${e.date}-${e.subject}`,
+        title: e.subject,
+        kind: e.kind,
+        start: `${e.date}T00:00:00`
+      }))
+    : events.filter(isExam).filter((e) => daysUntil(e.start) >= 0).map((e) => ({ id: e.id, title: examName(e.title), kind: '', start: e.start }))
+  const examDate = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace(',', '')
   const agenda = events.filter((e) => !isExam(e)).slice(0, 4)
   const hero = quotes.find((q) => q.symbol === DEFAULT_SYMBOL) ?? quotes[0]
 
@@ -324,30 +335,45 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
           pos: [51, 2, 45],
           content: (
             <>
-              <Top label="Klausuren" />
+              <Top label="Klausuren" right={exams.length ? <span className="sx-meta">{exams.length} anstehend</span> : undefined} />
               {exams.length === 0 ? (
-                cal.loading ? <Loading /> : <div className="sx-meta">Keine Klausuren im Kalender.</div>
+                examPlan.loading || cal.loading ? <Loading /> : <div className="sx-meta">Keine Klausuren geplant.</div>
               ) : (
-                <div className="sx-countdown">
-                  {exams.map((e) => (
-                    <div key={e.id}>
-                      <div className="sx-big num">
-                        {daysUntil(e.start)}
-                        <small>{daysUntil(e.start) === 1 ? 'Tag' : 'Tage'}</small>
-                      </div>
+                <>
+                  {/* Nächste Klausur groß, die folgenden kompakt darunter */}
+                  <div className="sx-exam-next">
+                    <div className="sx-big num">
+                      {daysUntil(exams[0].start)}
+                      <small>{daysUntil(exams[0].start) === 1 ? 'Tag' : 'Tage'}</small>
+                    </div>
+                    <div>
+                      <b>{exams[0].title}</b>
                       <div className="sx-meta">
-                        {examName(e.title)} · {new Date(e.start).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                        {[exams[0].kind, examDate(exams[0].start)].filter(Boolean).join(' · ')}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                  <div className="sx-exam-list">
+                    {exams.slice(1, 6).map((e) => {
+                      const d = daysUntil(e.start)
+                      return (
+                        <div className="sx-exam" key={e.id}>
+                          <span className="sx-exam__t">{e.title}</span>
+                          <span className="sx-meta">{examDate(e.start)}</span>
+                          <span className={`sx-tag ${d <= 14 ? 'is-hot' : ''}`}>{d} T</span>
+                        </div>
+                      )
+                    })}
+                    {exams.length > 6 && <div className="sx-meta">+ {exams.length - 6} weitere bis {examDate(exams[exams.length - 1].start)}</div>}
+                  </div>
+                </>
               )}
             </>
           )
         },
         {
           key: 'subs',
-          pos: [51, 58, 45],
+          pos: [3, 70, 46],
           content: (
             <>
               <Top
