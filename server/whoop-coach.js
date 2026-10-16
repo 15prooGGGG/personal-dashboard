@@ -131,6 +131,8 @@ export function buildCoaching({ days, events = [], now = new Date(), wake = null
     // Empfehlung, die man nicht einhalten kann, hilft nicht. Steht die
     // Weckzeit aber fest (Schule), zählt der Bedarf: dann ehrlich früher.
     if (schoolBed != null && wake?.minutes == null) bedRel = Math.min(Math.max(bedRel, schoolBed - 60), schoolBed + 60)
+    // Mit Tagesplan-Weckzeit auf 5 min runden wie dort – sonst 22:05 vs. 22:06.
+    if (wake?.minutes != null) bedRel = Math.round(bedRel / 5) * 5
     const expectedSleep = (wakeRel - bedRel) * 60000 * eff
     plan = {
       wake: clock(wakeTarget),
