@@ -2387,3 +2387,73 @@ code {
   font-size: 0.72rem;
   text-align: center;
 }
+
+/* Lernplan (StudyPlan.tsx) – unter dem Stapel */
+.lp { display: flex; flex-direction: column; gap: 18px; margin-top: 8px; }
+.lp-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+.lp-sum { color: var(--ink-soft); font-size: 0.9rem; }
+.lp-sum b { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lp-grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 900px) { .lp-grid { grid-template-columns: minmax(0, 1fr); } }
+.lp-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.lp-right { min-width: 0; }
+.lp-exams { display: flex; flex-direction: column; gap: 4px; }
+.lp-ex { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 12px; align-items: center; text-align: left; font: inherit; color: inherit;
+  padding: 11px 14px; border-radius: 16px; border: 1px solid transparent; background: none; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out); }
+.lp-ex:hover { background: var(--surface); }
+.lp-ex:focus-visible, .lp-more:focus-visible, .lp-study:focus-visible, .lp-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lp-ex[aria-pressed='true'] { background: var(--surface); border-color: var(--line-strong); box-shadow: var(--shadow-card); }
+.lp-cd { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 600; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; }
+.lp-cd small { display: block; font-family: 'Inter', sans-serif; font-size: 0.66rem; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 3px; }
+.lp-ex__body { display: flex; flex-direction: column; min-width: 0; }
+.lp-ex__t { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.92rem; }
+.lp-ex__t i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.lp-ex__k { font-weight: 400; color: var(--muted); }
+.lp-ex__m { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+.lp-bar { display: block; height: 5px; border-radius: 4px; background: var(--line); margin-top: 8px; overflow: hidden; }
+.lp-bar i { display: block; height: 100%; border-radius: 4px; background: var(--c); transition: width var(--dur-base) var(--ease-out); }
+.lp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.lp-chip { font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); }
+.lp-chip.is-ok { background: var(--accent-wash); color: var(--accent-deep); }
+.lp-chip.is-warn { background: color-mix(in srgb, var(--down) 14%, transparent); color: var(--down); }
+.lp-more { align-self: flex-start; font: inherit; font-size: 0.8rem; color: var(--muted); background: none; border: 0; padding: 6px 14px; cursor: pointer; }
+.lp-more:hover { color: var(--ink); }
+.lp-detail { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 18px 20px; box-shadow: var(--shadow-card); }
+.lp-detail h3 { margin: 0 0 4px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.05rem; }
+.lp-detail p { margin: 0 0 10px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+.lp-todos { display: flex; flex-direction: column; }
+.lp-todo { display: flex; gap: 10px; align-items: flex-start; font-size: 0.86rem; padding: 6px 0; cursor: pointer; }
+.lp-todo input { margin-top: 2px; accent-color: var(--accent); }
+.lp-todo.is-done span { color: var(--muted); text-decoration: line-through; }
+.lp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lp-btn { font-size: 0.8rem; font-weight: 500; padding: 7px 12px; border-radius: var(--r-ctl); border: 1px solid var(--line-strong); color: var(--ink); text-decoration: none; }
+.lp-btn.is-primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.lp-week-scroll { overflow-x: auto; padding-bottom: 10px; }
+.lp-week { display: grid; grid-template-columns: 34px repeat(7, minmax(80px, 1fr)); grid-template-rows: auto 440px; min-width: 620px; }
+.lp-dh { font-size: 0.76rem; color: var(--muted); text-align: center; padding-bottom: 8px; }
+.lp-dh b { display: block; font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: var(--ink); }
+.lp-dh.is-exam b { color: var(--accent); }
+.lp-hours { position: relative; }
+.lp-hours span { position: absolute; right: 8px; font-size: 0.66rem; color: var(--muted); transform: translateY(-50%); font-variant-numeric: tabular-nums; }
+.lp-col { position: relative; border-left: 1px solid var(--line); }
+.lp-hl { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); }
+.lp-blk { position: absolute; left: 4px; right: 4px; border-radius: 10px; padding: 4px 7px; font-size: 0.68rem; line-height: 1.25; overflow: hidden; box-sizing: border-box; }
+.lp-blk.is-school { background: repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 8px); color: var(--muted); }
+.lp-blk.is-gym, .lp-blk.is-event { background: var(--line-strong); color: var(--ink-soft); white-space: nowrap; text-overflow: ellipsis; }
+.lp-examtag { position: absolute; top: 4px; left: 4px; right: 4px; z-index: 1; border-radius: 8px; padding: 3px 6px; background: var(--accent); color: #fff; font-size: 0.66rem; font-weight: 600; text-align: center; }
+.lp-study { font: inherit; font-size: 0.68rem; font-weight: 600; text-align: left; cursor: pointer; z-index: 2;
+  color: color-mix(in srgb, var(--c) 70%, var(--ink)); background: color-mix(in srgb, var(--c) 14%, var(--surface)); border: 1.5px solid var(--c);
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out); }
+.lp-study small { display: block; font-weight: 400; opacity: 0.85; }
+.lp-study:hover:not(:disabled) { transform: translateY(-1px); }
+.lp-study:disabled { cursor: default; }
+.lp-study.is-past { opacity: 0.55; }
+.lp-study.is-off { --c: var(--muted); opacity: 0.5; border-style: dashed; background: transparent; text-decoration: line-through; z-index: 1; }
+.lp-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.76rem; color: var(--muted); margin-top: 12px; }
+.lp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.lp-legend i.is-study { background: color-mix(in srgb, var(--c) 14%, var(--surface)); border: 1.5px solid var(--c); }
+.lp-legend i.is-school { background: repeating-linear-gradient(45deg, var(--line-strong) 0 3px, transparent 3px 6px); }
+.lp-legend i.is-gym { background: var(--line-strong); }
+.lp-rules { margin: 12px 0 0; font-size: 0.78rem; color: var(--muted); line-height: 1.55; max-width: 70ch; }
+@media (prefers-reduced-motion: reduce) { .lp-study, .lp-bar i, .lp-ex { transition: none; } }

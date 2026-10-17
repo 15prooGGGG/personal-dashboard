@@ -13,6 +13,7 @@ import { getExams } from './exams.js'
 import { lessonsOn } from './stundenplan.js'
 import { buildDayPlan, nextWake } from './day-plan.js'
 import { getTodos } from './todos-store.js'
+import { buildStudyPlan } from './study-plan.js'
 import { buildJob, dueMode, loadAdvice } from './ai-coach.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -37,19 +38,32 @@ export async function buildPlanContext(now = new Date()) {
     soft(fetchWhoopHistory(), { connected: false })
   ])
   const whoopDays = history?.connected ? history.days : []
-  const plan = buildDayPlan({
+  const exams = getExams(now).exams ?? []
+  const input = {
     now,
     lessonsOn,
     events: cal.events ?? [],
     substitutions: subs,
     sleep: sleepNeed(whoopDays),
-    exams: getExams(now).exams ?? [],
-    studyBlocks: loadStudyBlocks()
-  })
+    exams
+  }
+  // Erst ohne Klausur-Lernblöcke rechnen (freie Lücken finden), dann den
+  // Lernplan hineinsetzen. Eigene Blöcke aus study-blocks.json gelten immer.
+  const manual = loadStudyBlocks()
+  const base = buildDayPlan({ ...input, studyBlocks: manual })
+  let study = null
+  try {
+    study = buildStudyPlan({ plan: base, exams })
+  } catch (err) {
+    console.error('study plan error:', err.message)
+  }
+  const plan = study
+    ? buildDayPlan({ ...input, studyBlocks: [...manual, ...study.blocks.map((b) => ({ date: b.date, start: b.start, end: b.end, title: b.title, kind: 'study' }))] })
+    : base
   const coaching = whoopDays.length
     ? buildCoaching({ days: whoopDays, events: cal.events ?? [], now, wake: nextWake(plan) })
     : null
-  return { plan, coaching, history }
+  return { plan, coaching, history, study }
 }
 
 // Auftrag für den KI-Runner (scripts/ai-coach-runner.sh): fällige Runde oder

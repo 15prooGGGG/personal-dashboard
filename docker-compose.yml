@@ -22,6 +22,11 @@ services:
       # Obsidian-Vault, per Syncthing vom Mac gespiegelt. Nur lesend – das
       # Dashboard fasst deine Notizen nicht an.
       - ./vault:/app/vault:ro
+      # Einzige Ausnahme: Lernplan-Notizen je Klausur legt das Dashboard selbst
+      # an und hakt dort Themen ab (server/study-plan.js).
+      - type: bind
+        source: "./vault/03 Bereiche/Schule & Abitur/Lernpläne"
+        target: "/app/vault/03 Bereiche/Schule & Abitur/Lernpläne"
     healthcheck:
       # 127.0.0.1 statt localhost: localhost löst im Container zuerst nach
       # IPv6 (::1) auf, der Server lauscht aber auf IPv4 – das ergab einen

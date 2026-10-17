@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import Showcase from '../components/Showcase.tsx'
 import type { ShowcaseArea } from '../components/Showcase.tsx'
 import DayPlan from '../components/DayPlan.tsx'
+import StudyPlan from '../components/StudyPlan.tsx'
+import type { StudyPlanData } from '../components/StudyPlan.tsx'
 import type { DayPlanData } from '../components/DayPlan.tsx'
 import { useApi } from '../lib/useApi.ts'
 import { useHistory } from '../lib/useStocks.ts'
@@ -116,6 +118,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   const sleep = useApi<SleepData>('/api/sleep', 15 * 60 * 1000)
   const plan = useApi<PlanData>('/api/stundenplan', 10 * 60 * 1000)
   const dayPlan = useApi<DayPlanData>('/api/dayplan', 10 * 60 * 1000)
+  const studyPlan = useApi<StudyPlanData>('/api/studyplan', 10 * 60 * 1000)
   const subs = useApi<SubstitutionPlan>('/api/substitutions', 10 * 60 * 1000)
   const cal = useApi<{ configured: boolean; events: CalendarEvent[] }>('/api/calendar', 10 * 60 * 1000)
   const mail = useApi<{ configured: boolean; mails: MailItem[] }>('/api/mail', 5 * 60 * 1000)
@@ -662,6 +665,16 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
       <DayPlan data={dayPlan.data} loading={dayPlan.loading} onReload={dayPlan.reload} />
 
       <Showcase title="Was heute zählt" areas={areas} jumpRef={jump} />
+
+      <StudyPlan
+        data={studyPlan.data}
+        loading={studyPlan.loading}
+        dayPlan={dayPlan.data}
+        onChange={() => {
+          studyPlan.reload()
+          dayPlan.reload()
+        }}
+      />
     </div>
   )
 }

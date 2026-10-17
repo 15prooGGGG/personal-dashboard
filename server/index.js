@@ -12,6 +12,7 @@ import { getVault } from './integrations/obsidian.js'
 import { fetchWhoop, fetchWhoopHistory, authLink, completeLink, isConfigured as whoopReady } from './integrations/whoop.js'
 import { buildCoaching } from './whoop-coach.js'
 import { getExams } from './exams.js'
+import { examId, setSkipped, toggleTopic } from './study-plan.js'
 import { getStundenplan } from './stundenplan.js'
 import { PDF_PATH, isConfigured as loesungsbuchReady, search as searchLoesungsbuch } from './loesungsbuch.js'
 // fetchQuotes heißt in beiden Kursmodulen gleich – hier umbenennen, damit klar
@@ -196,6 +197,41 @@ app.get('/api/exams', (req, res) => {
     console.error('exams error:', err.message)
     res.status(500).json({ error: 'Klausurplan konnte nicht gelesen werden' })
   }
+})
+
+// Klausur-Lernplan: Themen je Klausur (Notizen im Vault) + verteilte Lernblöcke.
+app.get('/api/studyplan', async (req, res) => {
+  try {
+    const { study } = await buildPlanContext()
+    if (!study) return res.status(500).json({ error: 'Lernplan nicht verfügbar' })
+    res.json(study)
+  } catch (err) {
+    console.error('studyplan error:', err.message)
+    res.status(500).json({ error: 'Lernplan nicht verfügbar' })
+  }
+})
+
+app.post('/api/studyplan/topic', (req, res) => {
+  const { examId: id, index, done } = req.body ?? {}
+  const exam = (getExams().exams ?? []).find((e) => examId(e) === id)
+  if (!exam || !Number.isInteger(index)) return res.status(400).json({ error: 'Klausur oder Thema unbekannt' })
+  try {
+    res.json({ topics: toggleTopic(exam, index, !!done) })
+  } catch (err) {
+    console.error('studyplan topic error:', err.message)
+    res.status(500).json({ error: 'Notiz konnte nicht gespeichert werden' })
+  }
+})
+
+// Block streichen (skip: true) oder zurückholen (skip: false).
+app.post('/api/studyplan/skip', (req, res) => {
+  const { date, start, end, skip } = req.body ?? {}
+  const hhmm = /^\d{2}:\d{2}$/
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? '') || !hhmm.test(start ?? '') || !hhmm.test(end ?? '')) {
+    return res.status(400).json({ error: 'Datum oder Zeit ungültig' })
+  }
+  setSkipped({ date, start, end, skip: !!skip })
+  res.json({ ok: true })
 })
 
 app.get('/api/vault', (req, res) => {
