@@ -359,13 +359,12 @@ export function buildDayPlan({
       .map(({ e, start, end }) => ({ kind: eventKind(e), title: e.title.trim(), start: Math.max(0, start), end: Math.min(DAY + 6 * H, end), calendar: e.calendar, source: 'calendar' }))
     // Wochenroutine: Gym, Essen, Lernen, Arbeit – Kalendertermine haben Vorrang.
     let routineBlocks = []
-    let gymAfterSchool = false
     if (routine) {
       const nextExam = exams.filter((e) => {
         const n = daysBetween(d, e.date)
         return n >= 1 && n <= (routine.exam?.withinDays ?? 5)
       }).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
-      const r = routineFor({
+      routineBlocks = routineFor({
         routine,
         weekday: weekdayOf(d),
         week: f.week,
@@ -378,12 +377,11 @@ export function buildDayPlan({
         planned: studyBlocks.filter((b) => b.date === d && b.auto && b.start && b.end).map((b) => ({ start: toMin(b.start), end: toMin(b.end) })),
         studyAsWindow: routineStudyAsWindow,
         hasGym: timed.some((b) => b.kind === 'gym'),
-        busy: [...timed.filter((b) => b.kind !== 'rest'), ...studyOn(d)]
+        busy: [...timed.filter((b) => b.kind !== 'rest'), ...studyOn(d)],
+        homeMin: MORNING.commuteMin
       })
-      routineBlocks = r.blocks
-      gymAfterSchool = r.gymAfterSchool
     }
-    if (f.last != null && !gymAfterSchool) blocks.push({ kind: 'commute', title: 'Heimweg', start: f.last, end: f.last + MORNING.commuteMin })
+    if (f.last != null) blocks.push({ kind: 'commute', title: 'Heimweg', start: f.last, end: f.last + MORNING.commuteMin })
 
     blocks.push(...timed)
     blocks.push(...routineBlocks)

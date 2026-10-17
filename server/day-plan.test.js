@@ -219,20 +219,21 @@ test('Entfall gilt nur für eigene Kurse (Lehrerkürzel oder Kurs)', () => {
 // ---- Wochenroutine ------------------------------------------------------------
 const routineList = (day) => day.blocks.filter((b) => b.source === 'routine' && b.title !== 'Feierabend').map((b) => `${b.startTime}-${b.endTime} ${b.title}`)
 
-test('Routine: Gym direkt nach der Schule, dann Essen, Lernen, Arbeit bis höchstens 21:00', () => {
+test('Routine: erst nach Hause, packen, dann Gym, dann Essen, Lernen, Arbeit bis höchstens 21:00', () => {
   const p = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 2, routine: ROUTINE })
   const mo = p.days[0]
   assert.deepEqual(routineList(mo), [
-    '15:30-15:40 Zum Gym',
-    '15:40-16:55 Oberkörper A',
-    '16:55-17:05 Heimweg',
-    '17:05-17:35 Essen & Runterkommen',
-    '17:35-18:50 Lernen',
-    '19:05-21:00 Arbeiten'
+    '15:55-16:10 Sachen packen & Snack',
+    '16:10-16:20 Zum Gym',
+    '16:20-17:35 Oberkörper A',
+    '17:35-17:45 Heimweg',
+    '17:45-18:15 Essen & Runterkommen',
+    '18:15-19:30 Lernen',
+    '19:45-21:00 Arbeiten'
   ])
   assert.ok(mo.blocks.some((b) => b.title === 'Feierabend' && b.startTime === '21:00'))
-  // Kein zusätzlicher 25-min-Heimweg ab Schulschluss, kein Warner „vor Schulschluss“
-  assert.equal(mo.blocks.filter((b) => b.title === 'Heimweg').length, 1)
+  // Heimweg von der Schule + Rückweg vom Gym, kein Warner
+  assert.deepEqual(mo.blocks.filter((b) => b.title === 'Heimweg').map((b) => b.startTime), ['15:30', '17:35'])
   assert.equal(mo.warnings.length, 0)
 })
 
@@ -262,8 +263,8 @@ test('Routine: veralteter Kalender „Gym Trainingsplan“ wird ersetzt, andere 
   })
   const mo = p.days[0]
   assert.ok(!mo.blocks.some((b) => b.title === 'Oberkörper Training'))
-  // Nachhilfe 18:00–19:00: Lernen rutscht dahinter, Arbeit füllt den Rest bis 21:00
-  assert.deepEqual(routineList(mo).slice(4), ['19:00-20:15 Lernen', '20:30-21:00 Arbeiten'])
+  // Nachhilfe 18:00–19:00: Essen und Lernen rutschen dahinter
+  assert.deepEqual(routineList(mo).slice(4), ['19:00-19:30 Essen & Runterkommen', '19:30-20:45 Lernen'])
 })
 
 test('Routine: vor der Klausur mehr Lernen, am Vortag nur Wiederholen und keine Arbeit', () => {
@@ -289,7 +290,7 @@ test('Routine: kurzer Schultag → 2 h Lernen, langer Tag → 30 min, Ruhetag oh
   const doTag = p.days[3]
   const dur = (day) => day.blocks.filter((b) => b.kind === 'study').reduce((n, b) => n + b.end - b.start, 0)
   assert.equal(dur(di), 120)
-  assert.equal(di.blocks.find((b) => b.kind === 'gym').startTime, '11:15')
+  assert.equal(di.blocks.find((b) => b.kind === 'gym').startTime, '11:55')
   assert.ok(di.blocks.filter((b) => b.kind === 'work').every((b) => b.end - b.start <= 180))
   assert.equal(dur(doTag), 30)
   assert.ok(!doTag.blocks.some((b) => b.kind === 'gym'))
@@ -307,17 +308,17 @@ test('Routine + Klausur-Lernplan: erst Lernzeit-Fenster, dann ersetzt der Lernpl
   const base = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 1, routine: ROUTINE, routineStudyAsWindow: true })
   const win = base.days[0].blocks.find((b) => b.title === 'Lernzeit')
   assert.equal(win.kind, 'free')
-  assert.equal(`${win.startTime}-${win.endTime}`, '17:35-18:50')
-  // Lernplan setzt 17:45–18:45 Mathe: kein zweites „Lernen“, Arbeit danach
+  assert.equal(`${win.startTime}-${win.endTime}`, '18:15-19:30')
+  // Lernplan setzt 18:25–19:25 Mathe: kein zweites „Lernen“, Arbeit danach
   const p = buildDayPlan({
     now: MONDAY_6,
     lessonsOn,
     sleep: sleep(),
     days: 1,
     routine: ROUTINE,
-    studyBlocks: [{ date: '2026-10-19', start: '17:45', end: '18:45', title: 'Mathe: Integral', kind: 'study', auto: true }]
+    studyBlocks: [{ date: '2026-10-19', start: '18:25', end: '19:25', title: 'Mathe: Integral', kind: 'study', auto: true }]
   })
   const mo = p.days[0]
   assert.deepEqual(mo.blocks.filter((b) => b.kind === 'study').map((b) => b.title), ['Mathe: Integral'])
-  assert.deepEqual(routineList(mo).slice(4), ['19:00-21:00 Arbeiten'])
+  assert.deepEqual(routineList(mo).slice(5), ['19:40-21:00 Arbeiten'])
 })

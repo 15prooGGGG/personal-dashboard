@@ -1,7 +1,8 @@
 // ===========================================================================
 // Wochenroutine nach der Schule (mit Lauri abgestimmt am 17.10.2026):
-//   - Gym direkt nach der Schule als Reset (Fahrrad 10 min), dann essen,
-//     dann lernen, Arbeit in die Lücke danach (flexibel, hohe Priorität: Geld).
+//   - Gym nach der Schule als Reset: erst nach Hause (Heimweg), Sachen packen
+//     + Snack, dann 10 min Fahrrad zum Gym (Lauri, 17.10.: direkt von der
+//     Schule geht nicht). Danach essen, dann lernen, Arbeit in die Lücke danach (flexibel, hohe Priorität: Geld).
 //   - Lernzeit richtet sich nach der Länge des Schultags; vor Klausuren mehr.
 //   - Abends spätestens 21:00 Schluss mit Lernen und Arbeit.
 //   - Wochenende: entspannt, aber produktiv – Arbeit, Training, etwas Lernen.
@@ -30,7 +31,7 @@ export const ROUTINE = {
   ignoreCalendars: /gym trainingsplan/i,
   // Training je Woche und Wochentag (null = Ruhetag)
   training: { A: TRAINING_WEEK, B: TRAINING_WEEK },
-  // fromHome: startet zu Hause nach dem normalen Heimweg (kein Fahrrad zum Gym)
+  // fromHome: startet direkt zu Hause (Laufen) – ohne Packen und Fahrrad
   sessions: {
     upperA: { title: 'Oberkörper A', min: 75, info: 'Klimmzug gew., Brustpresse, T-Bar Rudern, Schrägbank, Seitheben, Trizeps' },
     lowerA: { title: 'Unterkörper A', min: 75, info: 'Hackenschmidt Squat, Rum. Kreuzheben, Beinbeugen, Beinstrecken, Waden, Bauch' },
@@ -40,6 +41,8 @@ export const ROUTINE = {
     longRun: { title: 'Lauf locker (Zone 2)', min: 50, fromHome: true, info: 'höchstens 75 min' }
   },
   bikeMin: 10,
+  // Zu Hause: Sachen packen, umziehen, kleiner Snack vor dem Training
+  packMin: 15,
   mealMin: 30,
   // Lernzeit nach Schulschluss: bis 13:00 → 2 h, bis 15:30 → 75 min, länger → 30 min
   study: [
@@ -103,9 +106,10 @@ function fit(start, end, busy) {
  *                                    verteilt der Klausur-Lernplan seine Blöcke
  * @param {boolean} p.hasGym          eigener Gym-Termin im Kalender
  * @param {Array}   p.busy            Kalendertermine [{start,end}] – haben Vorrang
- * @returns {{ blocks: Array, gymAfterSchool: boolean }}
+ * @param {number}  [p.homeMin]       Heimweg von der Schule (Minuten)
+ * @returns {Array} Blöcke
  */
-export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam = null, examTomorrow = false, hasOwnPlan = false, planned = [], studyAsWindow = false, hasGym = false, busy = [] }) {
+export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam = null, examTomorrow = false, hasOwnPlan = false, planned = [], studyAsWindow = false, hasGym = false, busy = [], homeMin = 25 }) {
   const R = routine
   const out = []
   const limit = Math.min(toMin(R.dayEnd), bed - 30)
@@ -150,24 +154,29 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
 
   // ---- Schultag ----------------------------------------------------------------
   if (schoolEnd != null) {
-    let t = schoolEnd
-    let gymAfterSchool = false
+    let t = schoolEnd + homeMin // Heimweg (steht im Tagesplan)
     const extra = session?.info ? { info: session.info } : {}
-    if (session && !session.fromHome) {
-      // Fahrrad direkt von der Schule – ersetzt den Heimweg.
-      const go = place('commute', 'Zum Gym', t, R.bikeMin)
-      const g = go && go.start === t ? place('gym', session.title, go.end, session.min, extra) : null
+    if (session?.fromHome) {
+      // Laufen startet direkt zu Hause, vor dem Essen.
+      t = place('gym', session.title, t, session.min, extra)?.end ?? t
+    } else if (session) {
+      // Zu Hause packen + Snack, dann mit dem Fahrrad zum Gym und zurück.
+      const steps = []
+      const pack = place('break', 'Sachen packen & Snack', t, R.packMin)
+      if (pack) steps.push(pack)
+      const go = pack && pack.start === t ? place('commute', 'Zum Gym', pack.end, R.bikeMin) : null
+      if (go) steps.push(go)
+      const g = go && go.start === pack.end ? place('gym', session.title, go.end, session.min, extra) : null
       if (g) {
-        gymAfterSchool = true
         t = place('commute', 'Heimweg', g.end, R.bikeMin)?.end ?? g.end + R.bikeMin
-      } else if (go) {
-        out.splice(out.indexOf(go), 1)
-        taken.splice(taken.indexOf(go), 1)
+      } else {
+        // Passt nicht (Termin dazwischen): ganz weglassen statt halb planen.
+        for (const b of steps) {
+          out.splice(out.indexOf(b), 1)
+          taken.splice(taken.indexOf(b), 1)
+        }
       }
     }
-    if (!gymAfterSchool) t = schoolEnd + 25 // normaler Heimweg (Tagesplan)
-    // Laufen startet zu Hause, vor dem Essen.
-    if (session?.fromHome) t = place('gym', session.title, t, session.min, extra)?.end ?? t
     const meal = place('break', 'Essen & Runterkommen', t, R.mealMin)
     t = meal?.end ?? t
 
@@ -185,7 +194,7 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
         t = w ? w.end : t
       }
     }
-    return { blocks: closeDay(), gymAfterSchool }
+    return closeDay()
   }
 
   // ---- Freier Tag (Wochenende, Ferien) -------------------------------------------
@@ -200,5 +209,5 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
     }
   }
   if (session) place('gym', session.title, Math.max(toMin(R.free.trainingAt), t), session.min, session.info ? { info: session.info } : {})
-  return { blocks: closeDay(), gymAfterSchool: false }
+  return closeDay()
 }
