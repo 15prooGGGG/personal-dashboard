@@ -4,6 +4,9 @@
 // Der iCloud-Kalender liefert dem Dashboard nur 14 Tage im Voraus; der
 // Klausurplan im Vault enthält dagegen alle Termine des Halbjahres als
 // Markdown-Tabelle:  | Fr 23.10.2026 | Mathematik | LK + GK |
+// Die Kursart kommt aus Lauris eigener Kurswahl in „Schule & Abitur.md“
+// (### Leistungskurse / ### Grundkurse) – der Klausurplan nennt nur, für
+// welche Kurse der Termin gilt („LK + GK“).
 // Gelesen wird nur – der Vault ist im Container read-only eingebunden.
 // ===========================================================================
 import fs from 'node:fs'
@@ -45,11 +48,41 @@ export function parseExamTable(md) {
   return out.sort((a, b) => a.date.localeCompare(b.date))
 }
 
+/** Kurswahl-Notiz → Map Fach → 'LK' | 'GK'. */
+export function parseCourses(md) {
+  const out = new Map()
+  let level = null
+  for (const line of md.split('\n')) {
+    if (/^#+\s/.test(line)) {
+      level = /leistungskurs/i.test(line) ? 'LK' : /grundkurs/i.test(line) ? 'GK' : null
+      continue
+    }
+    const m = line.match(/^\s*[-*]\s+(.+)$/)
+    if (!level || !m) continue
+    const subject = m[1].replace(/\*\*/g, '').replace(/\([^)]*\)/g, '').trim()
+    if (subject) out.set(subject.toLowerCase(), level)
+  }
+  return out
+}
+
+function loadCourses() {
+  const file = path.join(VAULT_DIR, AREA, 'Schule & Abitur.md')
+  try {
+    return parseCourses(fs.readFileSync(file, 'utf8'))
+  } catch {
+    return new Map()
+  }
+}
+
 export function getExams(now = new Date()) {
   const file = findPlan()
   if (!file) return { configured: false, exams: [] }
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const all = parseExamTable(fs.readFileSync(file, 'utf8'))
+  const courses = loadCourses()
+  const all = parseExamTable(fs.readFileSync(file, 'utf8')).map((e) => ({
+    ...e,
+    kind: courses.get(e.subject.toLowerCase()) ?? e.kind
+  }))
   return {
     configured: true,
     source: path.relative(VAULT_DIR, file),
