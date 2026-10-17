@@ -117,7 +117,7 @@ export default function OverviewSection({ quotes, onOpen }: { quotes: Quote[]; o
   const whoop = useApi<WhoopData>('/api/whoop', 10 * 60 * 1000)
   const sleep = useApi<SleepData>('/api/sleep', 15 * 60 * 1000)
   const plan = useApi<PlanData>('/api/stundenplan', 10 * 60 * 1000)
-  const dayPlan = useApi<DayPlanData>('/api/dayplan', 10 * 60 * 1000)
+  const dayPlan = useApi<DayPlanData>('/api/dayplan', 5 * 60 * 1000)
   const studyPlan = useApi<StudyPlanData>('/api/studyplan', 10 * 60 * 1000)
   const subs = useApi<SubstitutionPlan>('/api/substitutions', 10 * 60 * 1000)
   const cal = useApi<{ configured: boolean; events: CalendarEvent[] }>('/api/calendar', 10 * 60 * 1000)

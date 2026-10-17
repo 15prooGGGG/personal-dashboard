@@ -6,7 +6,8 @@
 import { config, isConfigured } from '../config.js'
 import { isSchoolEvent, classify, byPriorityThenUrgency } from '../calendar-priority.js'
 
-const TTL = 10 * 60 * 1000
+// 5 min: Lauri ändert öfter Termine – die sollen schnell im Tagesplan landen.
+const TTL = 5 * 60 * 1000
 const WINDOW_DAYS = 14
 let cache = null
 
