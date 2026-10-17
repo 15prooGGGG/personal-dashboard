@@ -224,7 +224,7 @@ test('Routine: Gym direkt nach der Schule, dann Essen, Lernen, Arbeit bis höchs
   const mo = p.days[0]
   assert.deepEqual(routineList(mo), [
     '15:30-15:40 Zum Gym',
-    '15:40-16:55 Gym',
+    '15:40-16:55 Oberkörper A',
     '16:55-17:05 Heimweg',
     '17:05-17:35 Essen & Runterkommen',
     '17:35-18:50 Lernen',
@@ -234,6 +234,18 @@ test('Routine: Gym direkt nach der Schule, dann Essen, Lernen, Arbeit bis höchs
   // Kein zusätzlicher 25-min-Heimweg ab Schulschluss, kein Warner „vor Schulschluss“
   assert.equal(mo.blocks.filter((b) => b.title === 'Heimweg').length, 1)
   assert.equal(mo.warnings.length, 0)
+})
+
+test('Routine: Trainingsplan – Lauf am Mittwoch startet zu Hause, Donnerstag Ruhetag', () => {
+  const p = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 4, routine: ROUTINE })
+  const [mo, di, mi, doTag] = p.days
+  assert.equal(mo.blocks.find((b) => b.kind === 'gym').title, 'Oberkörper A')
+  assert.equal(di.blocks.find((b) => b.kind === 'gym').title, 'Unterkörper A')
+  assert.deepEqual(routineList(mi).slice(0, 2), ['15:55-16:30 Lauf locker (Zone 2)', '16:30-17:00 Essen & Runterkommen'])
+  assert.ok(!mi.blocks.some((b) => b.title === 'Zum Gym'))
+  assert.equal(mi.blocks.filter((b) => b.title === 'Heimweg').length, 1)
+  assert.match(mi.blocks.find((b) => b.kind === 'gym').info, /Arme/)
+  assert.ok(!doTag.blocks.some((b) => b.kind === 'gym'))
 })
 
 test('Routine: veralteter Kalender „Gym Trainingsplan“ wird ersetzt, andere Termine haben Vorrang', () => {
@@ -261,7 +273,7 @@ test('Routine: vor der Klausur mehr Lernen, am Vortag nur Wiederholen und keine 
   const s = mo.blocks.find((b) => b.kind === 'study')
   assert.equal(s.title, 'Lernen: Mathematik')
   assert.equal(s.end - s.start, 120)
-  assert.ok(routineList(mi).includes('17:20-18:20 Wiederholen: Mathematik'))
+  assert.ok(routineList(mi).includes('17:00-18:00 Wiederholen: Mathematik'))
   assert.ok(!mi.blocks.some((b) => b.kind === 'work'))
 })
 
@@ -287,8 +299,8 @@ test('Routine: Wochenende – Samstag arbeiten + Gym, Sonntag lernen, laufen, Wo
   const SAT_8 = new Date('2026-10-24T06:00:00Z')
   const p = buildDayPlan({ now: SAT_8, lessonsOn, sleep: sleep(), days: 2, routine: ROUTINE })
   const [sa, so] = p.days
-  assert.deepEqual(routineList(sa), ['09:30-12:30 Arbeiten', '14:30-15:45 Gym'])
-  assert.deepEqual(routineList(so), ['09:00-10:30 Lernen', '14:30-15:10 Laufen', '18:00-18:15 Woche planen'])
+  assert.deepEqual(routineList(sa), ['09:30-12:30 Arbeiten', '14:30-15:45 Unterkörper B'])
+  assert.deepEqual(routineList(so), ['09:00-10:30 Lernen', '14:30-15:20 Lauf locker (Zone 2)', '18:00-18:15 Woche planen'])
 })
 
 test('Routine + Klausur-Lernplan: erst Lernzeit-Fenster, dann ersetzt der Lernplan das allgemeine Lernen', () => {

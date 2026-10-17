@@ -7,23 +7,37 @@
 //   - Wochenende: entspannt, aber produktiv – Arbeit, Training, etwas Lernen.
 //     Termine aus dem Kalender (Einladungen usw.) haben immer Vorrang.
 //
-// Welche Einheit an welchem Tag liegt (Upper/Lower, Läufe, Arme/Schultern),
-// klärt die Gym-/Ernährungs-Session – hier stehen bis dahin Platzhalter.
+// Trainingsplan (Masseaufbau bis Sommer 2027, mit Lauri abgestimmt am
+// 17.10.2026, Details in der Vault-Notiz „Plan Masseaufbau 2026-27“):
+// Upper/Lower 4× pro Woche, 2 lockere Läufe im Erhaltungsumfang, Donnerstag
+// Ruhetag (Schule bis 17:15). A/B bei Oberkörper/Unterkörper sind zwei
+// verschiedene Einheiten, nicht die Schulwochen – der Plan gilt in beiden.
 // Der Kalender „Gym Trainingsplan“ ist veraltet und wird ignoriert, solange
 // diese Routine aktiv ist.
 // ===========================================================================
 
+const TRAINING_WEEK = {
+  Montag: 'upperA',
+  Dienstag: 'lowerA',
+  Mittwoch: 'run',
+  Donnerstag: null,
+  Freitag: 'upperB',
+  Samstag: 'lowerB',
+  Sonntag: 'longRun'
+}
+
 export const ROUTINE = {
   ignoreCalendars: /gym trainingsplan/i,
   // Training je Woche und Wochentag (null = Ruhetag)
-  training: {
-    A: { Montag: 'gym', Dienstag: 'run', Mittwoch: 'arms', Donnerstag: null, Freitag: 'gym', Samstag: 'gym', Sonntag: 'run' },
-    B: { Montag: 'gym', Dienstag: 'gym', Mittwoch: 'arms', Donnerstag: null, Freitag: 'run', Samstag: 'gym', Sonntag: 'run' }
-  },
+  training: { A: TRAINING_WEEK, B: TRAINING_WEEK },
+  // fromHome: startet zu Hause nach dem normalen Heimweg (kein Fahrrad zum Gym)
   sessions: {
-    gym: { title: 'Gym', min: 75 },
-    arms: { title: 'Gym: Arme & Schultern', min: 60 },
-    run: { title: 'Laufen', min: 40 }
+    upperA: { title: 'Oberkörper A', min: 75, info: 'Klimmzug gew., Brustpresse, T-Bar Rudern, Schrägbank, Seitheben, Trizeps' },
+    lowerA: { title: 'Unterkörper A', min: 75, info: 'Hackenschmidt Squat, Rum. Kreuzheben, Beinbeugen, Beinstrecken, Waden, Bauch' },
+    upperB: { title: 'Oberkörper B', min: 75, info: 'Schrägbank, Latzug, Schulterpresse, Kabelrudern, Butterfly, Reverse Butterfly' },
+    lowerB: { title: 'Unterkörper B', min: 75, info: 'Beinpresse, Beinbeugen, Split Squats, Hyperextension, Adduktion, Waden' },
+    run: { title: 'Lauf locker (Zone 2)', min: 35, fromHome: true, info: 'optional danach Arme & Schultern, nur bei Recovery ab 50' },
+    longRun: { title: 'Lauf locker (Zone 2)', min: 50, fromHome: true, info: 'höchstens 75 min' }
   },
   bikeMin: 10,
   mealMin: 30,
@@ -138,10 +152,11 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
   if (schoolEnd != null) {
     let t = schoolEnd
     let gymAfterSchool = false
-    if (session) {
+    const extra = session?.info ? { info: session.info } : {}
+    if (session && !session.fromHome) {
       // Fahrrad direkt von der Schule – ersetzt den Heimweg.
       const go = place('commute', 'Zum Gym', t, R.bikeMin)
-      const g = go && go.start === t ? place('gym', session.title, go.end, session.min) : null
+      const g = go && go.start === t ? place('gym', session.title, go.end, session.min, extra) : null
       if (g) {
         gymAfterSchool = true
         t = place('commute', 'Heimweg', g.end, R.bikeMin)?.end ?? g.end + R.bikeMin
@@ -151,6 +166,8 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
       }
     }
     if (!gymAfterSchool) t = schoolEnd + 25 // normaler Heimweg (Tagesplan)
+    // Laufen startet zu Hause, vor dem Essen.
+    if (session?.fromHome) t = place('gym', session.title, t, session.min, extra)?.end ?? t
     const meal = place('break', 'Essen & Runterkommen', t, R.mealMin)
     t = meal?.end ?? t
 
@@ -182,6 +199,6 @@ export function routineFor({ routine, weekday, week, schoolEnd, wake, bed, exam 
       if (b && !item.at) t = b.end
     }
   }
-  if (session) place('gym', session.title, Math.max(toMin(R.free.trainingAt), t), session.min)
+  if (session) place('gym', session.title, Math.max(toMin(R.free.trainingAt), t), session.min, session.info ? { info: session.info } : {})
   return { blocks: closeDay(), gymAfterSchool: false }
 }
