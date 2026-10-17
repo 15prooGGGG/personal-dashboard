@@ -21,6 +21,7 @@
 
 import { MORNING, SCHOOL_BREAKS } from './stundenplan-config.js'
 import { countsForPlanning } from './calendar-priority.js'
+import { routineFor } from './week-routine.js'
 
 const TZ = 'Europe/Berlin'
 const DAY = 1440
@@ -31,9 +32,10 @@ const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Fr
 const DEFAULT_FIRST = 7 * H + 40
 const MORNING_MIN = MORNING.routineMin + MORNING.commuteMin
 // An freien Tagen höchstens 2 h später aufstehen als an Schultagen (vor
-// einem Schultag nur 1 h) – sonst kippt der Rhythmus bis Montag.
+// einem Schultag 1,5 h – Lauri: am Wochenende gegen 8–9 Uhr) – sonst kippt
+// der Rhythmus bis Montag.
 const FREE_LATER = 2 * H
-const FREE_LATER_BEFORE_SCHOOL = 1 * H
+const FREE_LATER_BEFORE_SCHOOL = 1.5 * H
 // Frühestens so zu Bett – alles davor ist Theorie.
 const EARLIEST_BED = 20 * H + 30
 const DEFAULT_NEED_MS = 8 * 3600000
@@ -177,6 +179,8 @@ const periodsText = (b) => (b.from === b.to ? `${b.from}. Std.` : `${b.from}.–
  * @param {object}   [input.sleep]         sleepNeed() aus whoop-coach.js
  * @param {Array}    [input.exams]         [{ date, subject, kind }]
  * @param {Array}    [input.studyBlocks]   [{ date, start, end, title, kind }]
+ * @param {object}   [input.routine]       ROUTINE aus week-routine.js (null = ohne Routine)
+ * @param {boolean}  [input.routineStudyAsWindow] Lernzeit der Routine als freies Fenster (für den Klausur-Lernplan)
  */
 export function buildDayPlan({
   now = new Date(),
@@ -186,12 +190,15 @@ export function buildDayPlan({
   substitutions = null,
   sleep = null,
   exams = [],
-  studyBlocks = []
+  studyBlocks = [],
+  routine = null,
+  routineStudyAsWindow = false
 }) {
   const here = local(now.toISOString())
   const today = here.date
-  const own = events.filter(countsForPlanning)
-  const ignored = events.length - own.length
+  // Veraltete Kalender (z. B. „Gym Trainingsplan“) ersetzt die Routine.
+  const own = events.filter(countsForPlanning).filter((e) => !routine?.ignoreCalendars?.test(e.calendar ?? ''))
+  const ignored = events.length - events.filter(countsForPlanning).length
   const eff = sleep?.efficiency ?? 0.9
   const subFor = (d) => substitutions?.days?.find((x) => x.date === deDate(d)) ?? null
 
@@ -338,8 +345,6 @@ export function buildDayPlan({
         info: b.kind === 'break' ? `${clock(b.start)}–${clock(b.end)}` : `${b.room ? `${b.room} · ` : ''}${periodsText(b)}`
       })
     }
-    if (f.last != null) blocks.push({ kind: 'commute', title: 'Heimweg', start: f.last, end: f.last + MORNING.commuteMin })
-
     // Kalender: zeitgebundene eigene Termine an diesem Tag
     const timed = own
       .filter((e) => !e.allDay && e.end)
@@ -352,7 +357,36 @@ export function buildDayPlan({
       })
       .filter((x) => x.end > 0 && x.start < DAY)
       .map(({ e, start, end }) => ({ kind: eventKind(e), title: e.title.trim(), start: Math.max(0, start), end: Math.min(DAY + 6 * H, end), calendar: e.calendar, source: 'calendar' }))
+    // Wochenroutine: Gym, Essen, Lernen, Arbeit – Kalendertermine haben Vorrang.
+    let routineBlocks = []
+    let gymAfterSchool = false
+    if (routine) {
+      const nextExam = exams.filter((e) => {
+        const n = daysBetween(d, e.date)
+        return n >= 1 && n <= (routine.exam?.withinDays ?? 5)
+      }).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
+      const r = routineFor({
+        routine,
+        weekday: weekdayOf(d),
+        week: f.week,
+        schoolEnd: f.last,
+        wake: w.wake,
+        bed,
+        exam: nextExam,
+        examTomorrow: exams.some((e) => e.date === addDays(d, 1)),
+        hasOwnPlan: studyBlocks.some((b) => b.date === d && !b.auto),
+        planned: studyBlocks.filter((b) => b.date === d && b.auto && b.start && b.end).map((b) => ({ start: toMin(b.start), end: toMin(b.end) })),
+        studyAsWindow: routineStudyAsWindow,
+        hasGym: timed.some((b) => b.kind === 'gym'),
+        busy: [...timed.filter((b) => b.kind !== 'rest'), ...studyOn(d)]
+      })
+      routineBlocks = r.blocks
+      gymAfterSchool = r.gymAfterSchool
+    }
+    if (f.last != null && !gymAfterSchool) blocks.push({ kind: 'commute', title: 'Heimweg', start: f.last, end: f.last + MORNING.commuteMin })
+
     blocks.push(...timed)
+    blocks.push(...routineBlocks)
     blocks.push(...studyOn(d))
 
     // Schlaf: Rest der letzten Nacht und die kommende Nacht
@@ -396,13 +430,15 @@ export function buildDayPlan({
     }
     if (w.late) notes.push({ kind: w.late.choice === 'sleep' ? 'sleep-in' : 'study-early', ...w.late })
     if (f.last != null && f.regLast != null && f.regLast - f.last >= 45) {
-      const gym = timed.find((b) => b.kind === 'gym' && b.start >= f.last)
+      const gym = [...timed, ...routineBlocks].find((b) => b.kind === 'gym' && b.start >= f.last)
       const home = f.last + MORNING.commuteMin
       const cancelledText = f.lessonBlocks.filter((b) => b.kind === 'cancelled' && b.start >= f.last).map(periodsText).join(', ')
       notes.push({
         kind: 'early-end',
         title: `Früher Schluss: ${clock(f.last)} statt ${clock(f.regLast)}`,
-        detail: gym
+        detail: gym?.source === 'routine'
+          ? `${cancelledText} entfällt. ${gym.title} rutscht mit nach vorn (ab ${clock(gym.start)}) – danach bleibt mehr Abend zum Lernen.`
+          : gym
           ? `${cancelledText} entfällt. ${gym.title} kann von ${clock(gym.start)} auf ab ${clock(home + 30)} vorrutschen – danach bleibt mehr Abend zum Lernen.`
           : `${cancelledText} entfällt. ${durText(f.regLast - f.last)} mehr Nachmittag – Lernen oder Training können nach vorn rutschen.`
       })
@@ -418,7 +454,7 @@ export function buildDayPlan({
     }
 
     const school = f.first != null ? { start: f.first - MORNING.commuteMin, end: f.last + MORNING.commuteMin } : null
-    const gyms = timed.filter((b) => b.kind === 'gym')
+    const gyms = [...timed, ...routineBlocks].filter((b) => b.kind === 'gym')
     const studies = blocks.filter((b) => b.kind === 'study')
     for (const ev of timed.filter((b) => b.kind !== 'gym')) {
       const when = `${clock(ev.start)}–${clock(ev.end)}`
@@ -434,7 +470,7 @@ export function buildDayPlan({
       if (ev.end > bed) warn(`„${ev.title}“ endet um ${clock(ev.end)} – nach deiner Schlafenszeit ${clock(bed)}.`, { with: 'sleep', event: ev.title })
     }
     for (const g of gyms) {
-      if (school && overlap(g, school)) warn(`${g.title} (${clock(g.start)}) beginnt vor Schulschluss + Heimweg (${clock(school.end)}).`, { with: 'school', event: g.title })
+      if (school && g.source !== 'routine' && overlap(g, school)) warn(`${g.title} (${clock(g.start)}) beginnt vor Schulschluss + Heimweg (${clock(school.end)}).`, { with: 'school', event: g.title })
       if (g.end > bed) warn(`${g.title} endet um ${clock(g.end)} – nach deiner Schlafenszeit ${clock(bed)}.`, { with: 'sleep', event: g.title })
     }
     // Hartes Training am Abend vor einer Klausur

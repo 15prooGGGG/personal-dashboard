@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { buildDayPlan, nextWake, eventKind, entryMatchesLesson } from './day-plan.js'
 import { countsForPlanning } from './calendar-priority.js'
+import { ROUTINE } from './week-routine.js'
 
 const H = 3600000
 // Montag 19.10.2026, 06:00 Berlin (= 04:00 UTC)
@@ -156,7 +157,7 @@ test('Ferien und Wochenende: Rhythmus halten, vor Schultag nur 1 h später', () 
   const p = buildDayPlan({ now: new Date('2026-10-16T08:00:00Z'), lessonsOn, sleep: sleep(), days: 4 })
   assert.deepEqual(
     p.days.map((d) => `${d.weekday} ${d.schoolDay} ${d.wake.time}`),
-    ['Freitag false 08:30', 'Samstag false 08:30', 'Sonntag false 07:30', 'Montag true 06:30']
+    ['Freitag false 08:30', 'Samstag false 08:30', 'Sonntag false 08:00', 'Montag true 06:30']
   )
   assert.equal(p.days[0].breakName, 'Herbstferien')
   // Sonntagabend früh ins Bett für Montag 06:30
@@ -213,4 +214,98 @@ test('Entfall gilt nur für eigene Kurse (Lehrerkürzel oder Kurs)', () => {
   })
   assert.equal(p.days[0].school.end, '15:30')
   assert.ok(!p.days[0].blocks.some((b) => b.kind === 'cancelled'))
+})
+
+// ---- Wochenroutine ------------------------------------------------------------
+const routineList = (day) => day.blocks.filter((b) => b.source === 'routine' && b.title !== 'Feierabend').map((b) => `${b.startTime}-${b.endTime} ${b.title}`)
+
+test('Routine: Gym direkt nach der Schule, dann Essen, Lernen, Arbeit bis höchstens 21:00', () => {
+  const p = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 2, routine: ROUTINE })
+  const mo = p.days[0]
+  assert.deepEqual(routineList(mo), [
+    '15:30-15:40 Zum Gym',
+    '15:40-16:55 Gym',
+    '16:55-17:05 Heimweg',
+    '17:05-17:35 Essen & Runterkommen',
+    '17:35-18:50 Lernen',
+    '19:05-21:00 Arbeiten'
+  ])
+  assert.ok(mo.blocks.some((b) => b.title === 'Feierabend' && b.startTime === '21:00'))
+  // Kein zusätzlicher 25-min-Heimweg ab Schulschluss, kein Warner „vor Schulschluss“
+  assert.equal(mo.blocks.filter((b) => b.title === 'Heimweg').length, 1)
+  assert.equal(mo.warnings.length, 0)
+})
+
+test('Routine: veralteter Kalender „Gym Trainingsplan“ wird ersetzt, andere Termine haben Vorrang', () => {
+  const p = buildDayPlan({
+    now: MONDAY_6,
+    lessonsOn,
+    sleep: sleep(),
+    days: 1,
+    routine: ROUTINE,
+    events: [
+      ev('Oberkörper Training', '2026-10-19T16:30:00Z', '2026-10-19T18:00:00Z', 'Gym Trainingsplan'),
+      ev('Nachhilfe', '2026-10-19T16:00:00Z', '2026-10-19T17:00:00Z') // 18:00–19:00
+    ]
+  })
+  const mo = p.days[0]
+  assert.ok(!mo.blocks.some((b) => b.title === 'Oberkörper Training'))
+  // Nachhilfe 18:00–19:00: Lernen rutscht dahinter, Arbeit füllt den Rest bis 21:00
+  assert.deepEqual(routineList(mo).slice(4), ['19:00-20:15 Lernen', '20:30-21:00 Arbeiten'])
+})
+
+test('Routine: vor der Klausur mehr Lernen, am Vortag nur Wiederholen und keine Arbeit', () => {
+  const exams = [{ date: '2026-10-22', subject: 'Mathematik' }]
+  const p = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 3, routine: ROUTINE, exams })
+  const [mo, , mi] = p.days
+  const s = mo.blocks.find((b) => b.kind === 'study')
+  assert.equal(s.title, 'Lernen: Mathematik')
+  assert.equal(s.end - s.start, 120)
+  assert.ok(routineList(mi).includes('17:20-18:20 Wiederholen: Mathematik'))
+  assert.ok(!mi.blocks.some((b) => b.kind === 'work'))
+})
+
+test('Routine: kurzer Schultag → 2 h Lernen, langer Tag → 30 min, Ruhetag ohne Gym', () => {
+  const short = [MONDAY[0], MONDAY[1], MONDAY[2], MONDAY[3]] // bis 11:05
+  const long = [...MONDAY, L(10, '15:45', '16:30', 'Sport'), L(11, '16:30', '17:15', 'Sport')]
+  const lo = (d) => {
+    const wd = new Date(`${d}T12:00:00Z`).getUTCDay()
+    return wd === 2 ? { week: 'B', lessons: short } : wd === 4 ? { week: 'B', lessons: long } : wd >= 1 && wd <= 5 ? { week: 'B', lessons: MONDAY } : null
+  }
+  const p = buildDayPlan({ now: MONDAY_6, lessonsOn: lo, sleep: sleep(), days: 4, routine: ROUTINE })
+  const di = p.days[1]
+  const doTag = p.days[3]
+  const dur = (day) => day.blocks.filter((b) => b.kind === 'study').reduce((n, b) => n + b.end - b.start, 0)
+  assert.equal(dur(di), 120)
+  assert.equal(di.blocks.find((b) => b.kind === 'gym').startTime, '11:15')
+  assert.ok(di.blocks.filter((b) => b.kind === 'work').every((b) => b.end - b.start <= 180))
+  assert.equal(dur(doTag), 30)
+  assert.ok(!doTag.blocks.some((b) => b.kind === 'gym'))
+})
+
+test('Routine: Wochenende – Samstag arbeiten + Gym, Sonntag lernen, laufen, Woche planen', () => {
+  const SAT_8 = new Date('2026-10-24T06:00:00Z')
+  const p = buildDayPlan({ now: SAT_8, lessonsOn, sleep: sleep(), days: 2, routine: ROUTINE })
+  const [sa, so] = p.days
+  assert.deepEqual(routineList(sa), ['09:30-12:30 Arbeiten', '14:30-15:45 Gym'])
+  assert.deepEqual(routineList(so), ['09:00-10:30 Lernen', '14:30-15:10 Laufen', '18:00-18:15 Woche planen'])
+})
+
+test('Routine + Klausur-Lernplan: erst Lernzeit-Fenster, dann ersetzt der Lernplan das allgemeine Lernen', () => {
+  const base = buildDayPlan({ now: MONDAY_6, lessonsOn, sleep: sleep(), days: 1, routine: ROUTINE, routineStudyAsWindow: true })
+  const win = base.days[0].blocks.find((b) => b.title === 'Lernzeit')
+  assert.equal(win.kind, 'free')
+  assert.equal(`${win.startTime}-${win.endTime}`, '17:35-18:50')
+  // Lernplan setzt 17:45–18:45 Mathe: kein zweites „Lernen“, Arbeit danach
+  const p = buildDayPlan({
+    now: MONDAY_6,
+    lessonsOn,
+    sleep: sleep(),
+    days: 1,
+    routine: ROUTINE,
+    studyBlocks: [{ date: '2026-10-19', start: '17:45', end: '18:45', title: 'Mathe: Integral', kind: 'study', auto: true }]
+  })
+  const mo = p.days[0]
+  assert.deepEqual(mo.blocks.filter((b) => b.kind === 'study').map((b) => b.title), ['Mathe: Integral'])
+  assert.deepEqual(routineList(mo).slice(4), ['19:00-21:00 Arbeiten'])
 })

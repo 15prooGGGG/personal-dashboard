@@ -12,6 +12,7 @@ import { buildCoaching, sleepNeed } from './whoop-coach.js'
 import { getExams } from './exams.js'
 import { lessonsOn } from './stundenplan.js'
 import { buildDayPlan, nextWake } from './day-plan.js'
+import { ROUTINE } from './week-routine.js'
 import { getTodos } from './todos-store.js'
 import { buildStudyPlan } from './study-plan.js'
 import { buildJob, dueMode, loadAdvice } from './ai-coach.js'
@@ -45,12 +46,14 @@ export async function buildPlanContext(now = new Date()) {
     events: cal.events ?? [],
     substitutions: subs,
     sleep: sleepNeed(whoopDays),
-    exams
+    exams,
+    routine: ROUTINE
   }
-  // Erst ohne Klausur-Lernblöcke rechnen (freie Lücken finden), dann den
-  // Lernplan hineinsetzen. Eigene Blöcke aus study-blocks.json gelten immer.
+  // Erst ohne Klausur-Lernblöcke rechnen (freie Lücken finden – die Routine
+  // hält dafür ihre Lernzeit als Fenster frei), dann den Lernplan hineinsetzen.
+  // Eigene Blöcke aus study-blocks.json gelten immer.
   const manual = loadStudyBlocks()
-  const base = buildDayPlan({ ...input, studyBlocks: manual })
+  const base = buildDayPlan({ ...input, studyBlocks: manual, routineStudyAsWindow: true })
   let study = null
   try {
     study = buildStudyPlan({ plan: base, exams })
@@ -58,8 +61,8 @@ export async function buildPlanContext(now = new Date()) {
     console.error('study plan error:', err.message)
   }
   const plan = study
-    ? buildDayPlan({ ...input, studyBlocks: [...manual, ...study.blocks.map((b) => ({ date: b.date, start: b.start, end: b.end, title: b.title, kind: 'study' }))] })
-    : base
+    ? buildDayPlan({ ...input, studyBlocks: [...manual, ...study.blocks.map((b) => ({ date: b.date, start: b.start, end: b.end, title: b.title, kind: 'study', auto: true }))] })
+    : buildDayPlan({ ...input, studyBlocks: manual })
   const coaching = whoopDays.length
     ? buildCoaching({ days: whoopDays, events: cal.events ?? [], now, wake: nextWake(plan) })
     : null
