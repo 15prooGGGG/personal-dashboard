@@ -2422,7 +2422,10 @@ code {
 .lp-detail { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 18px 20px; box-shadow: var(--shadow-card); }
 .lp-detail h3 { margin: 0 0 4px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.05rem; }
 .lp-detail p { margin: 0 0 10px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
-.lp-todos { display: flex; flex-direction: column; }
+.lp-todos { display: flex; flex-direction: column; max-height: 420px; overflow-y: auto; margin-right: -8px; padding-right: 8px; }
+.lp-sec { display: flex; justify-content: space-between; gap: 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); padding: 12px 0 4px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.lp-sec:first-child { padding-top: 0; }
+.lp-sec span { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
 .lp-todo { display: flex; gap: 10px; align-items: flex-start; font-size: 0.86rem; padding: 6px 0; cursor: pointer; }
 .lp-todo input { margin-top: 2px; accent-color: var(--accent); }
 .lp-todo.is-done span { color: var(--muted); text-decoration: line-through; }

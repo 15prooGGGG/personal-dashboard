@@ -10,9 +10,9 @@ const md = `# Lernplan
 
 test('Themen: Checkliste lesen, leere Zeilen ignorieren', () => {
   assert.deepEqual(parseTopics(md), [
-    { text: 'Ableitung', done: true },
-    { text: 'Integral', done: false },
-    { text: 'Altklausur', done: false }
+    { text: 'Ableitung', done: true, section: null },
+    { text: 'Integral', done: false, section: null },
+    { text: 'Altklausur', done: false, section: null }
   ])
 })
 
@@ -70,4 +70,19 @@ test('Verteilung: Themen landen der Reihe nach in den Blöcken', () => {
   assert.equal(titles[0], 'Mathe: B')
   assert.ok(titles.includes('Mathe: C'))
   assert.ok(!titles.some((t) => t.includes(': A')))
+})
+
+test('Verteilung: Abschnitte statt einzelner Themen, alle offenen kommen vor', () => {
+  const exams = [{ date: '2026-10-23', subject: 'Mathematik', kind: 'LK' }]
+  const topics = [
+    { text: 'a', done: true, section: 'Trigo' },
+    { text: 'b', done: false, section: 'Trigo' },
+    { text: 'c', done: false, section: 'Umkehr' },
+    { text: 'd', done: false, section: 'Ketten' },
+    { text: 'e', done: false, section: 'Bestand' }
+  ]
+  const { blocks } = scheduleStudy({ plan: plan(dates), exams, topicsOf: () => topics })
+  const text = blocks.map((b) => b.topic).join(' | ')
+  for (const s of ['Trigo', 'Umkehr', 'Ketten', 'Bestand']) assert.ok(text.includes(s), text)
+  assert.equal(blocks[0].topic.split(' · ')[0], 'Trigo')
 })

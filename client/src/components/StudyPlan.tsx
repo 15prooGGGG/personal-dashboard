@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { DayPlanData, PlanDay } from './DayPlan.tsx'
 
 // ===========================================================================
@@ -19,7 +19,7 @@ export interface StudyExam {
   inDays: number
   note: string
   noteExists: boolean
-  topics: { text: string; done: boolean }[]
+  topics: { text: string; done: boolean; section?: string | null }[]
   topicsDue: string
   topicsLate: boolean
   budgetMin: number
@@ -213,17 +213,31 @@ export default function StudyPlan({
               <>
                 <p>Aus der Notiz „{current.note.split('/').pop()?.replace(/\.md$/, '')}“. Abhaken hier oder in Obsidian, beides bleibt gleich.</p>
                 <div className="lp-todos">
-                  {topicsOf(current).map((t, i) => (
-                    <label key={`${current.id}-${i}`} className={`lp-todo${t.done ? ' is-done' : ''}`}>
-                      <input
-                        id={`lp-${current.id}-${i}`}
-                        type="checkbox"
-                        checked={t.done}
-                        onChange={(ev) => toggleTopic(current, i, ev.target.checked)}
-                      />
-                      <span>{t.text}</span>
-                    </label>
-                  ))}
+                  {topicsOf(current).map((t, i, all) => {
+                    const head = t.section && t.section !== all[i - 1]?.section
+                    const inSection = all.filter((x) => x.section === t.section)
+                    return (
+                      <Fragment key={`${current.id}-${i}`}>
+                        {head && (
+                          <div className="lp-sec">
+                            {t.section}
+                            <span>
+                              {inSection.filter((x) => x.done).length}/{inSection.length}
+                            </span>
+                          </div>
+                        )}
+                        <label className={`lp-todo${t.done ? ' is-done' : ''}`}>
+                          <input
+                            id={`lp-${current.id}-${i}`}
+                            type="checkbox"
+                            checked={t.done}
+                            onChange={(ev) => toggleTopic(current, i, ev.target.checked)}
+                          />
+                          <span>{t.text}</span>
+                        </label>
+                      </Fragment>
+                    )
+                  })}
                 </div>
               </>
             ) : (

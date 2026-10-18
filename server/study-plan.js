@@ -65,12 +65,22 @@ const floor15 = (m) => Math.floor(m / 15) * 15
 export const notePath = (e) => path.join(NOTE_DIR, `Lernplan ${e.subject} ${ddmm(e.date)}${e.date.slice(0, 4)}.md`)
 
 const TASK = /^(\s*[-*]\s+\[)( |x|X)(\]\s+)(.*\S)\s*$/
+const HEADING = /^#{2,6}\s+(.+?)\s*$/
+// Überschriften unter „## Themen“ gliedern die Liste in Abschnitte – die
+// landen als Lernblock-Thema im Plan (statt einzelner Spiegelstriche).
 export function parseTopics(md) {
-  return md
-    .split('\n')
-    .map((l) => l.match(TASK))
-    .filter(Boolean)
-    .map((m) => ({ text: m[4].trim(), done: m[2] !== ' ' }))
+  let section = null
+  const out = []
+  for (const line of md.split('\n')) {
+    const h = line.match(HEADING)
+    if (h) {
+      section = /^themen$/i.test(h[1]) ? null : h[1]
+      continue
+    }
+    const m = line.match(TASK)
+    if (m) out.push({ text: m[4].trim(), done: m[2] !== ' ', section })
+  }
+  return out
 }
 
 /** Setzt das n-te Thema (Zählung wie parseTopics) auf erledigt/offen. */
@@ -231,7 +241,7 @@ export function scheduleStudy({ plan, exams, state = { blocks: [], skipped: [] }
     const doneMin = past.filter((b) => b.examId === e.id).reduce((a, b) => a + toMin(b.end) - toMin(b.start), 0)
     let remaining = Math.max(0, r.budgetMin - doneMin)
     const mine = []
-    const open = topicsOf(e).filter((t) => !t.done).map((t) => t.text)
+    const open = topicsOf(e).filter((t) => !t.done)
 
     for (const day of plan.days) {
       const d = day.date
@@ -260,10 +270,15 @@ export function scheduleStudy({ plan, exams, state = { blocks: [], skipped: [] }
       usedByDate.set(d, used)
     }
 
-    // Themen der Reihe nach auf die Blöcke verteilen, Vorabend = Wiederholung.
+    // Offene Abschnitte (ohne Abschnitte: einzelne Themen) der Reihe nach auf
+    // die Blöcke aufteilen, Vorabend = Wiederholung.
     const study = mine.filter((b) => !b.eve)
+    const units = open.some((t) => t.section) ? [...new Set(open.map((t) => t.section ?? 'Sonstiges'))] : open.map((t) => t.text)
     study.forEach((b, i) => {
-      if (open.length) b.topic = open[Math.floor((i * open.length) / study.length)]
+      if (!units.length) return
+      const from = Math.floor((i * units.length) / study.length)
+      const to = Math.max(from + 1, Math.floor(((i + 1) * units.length) / study.length))
+      b.topic = units.slice(from, to).join(' · ')
     })
     for (const b of mine) {
       if (b.eve) b.topic = 'kurz wiederholen'
